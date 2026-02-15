@@ -57,6 +57,7 @@ def create_app(config_class=Config):
 
     register_cli(app)
     ensure_runtime_schema_compat(app)
+    ensure_runtime_tables(app)
 
     @app.route("/health")
     def healthcheck():
@@ -359,6 +360,17 @@ def create_app(config_class=Config):
 
     return app
 
+
+
+
+
+def ensure_runtime_tables(app):
+    """Ensure core tables exist at runtime (useful on fresh managed Postgres)."""
+    with app.app_context():
+        try:
+            db.create_all()
+        except Exception as exc:
+            app.logger.warning("Runtime db.create_all() failed: %s", exc)
 
 
 def ensure_runtime_schema_compat(app):
