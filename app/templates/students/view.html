@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3 flex-wrap gap-2">
+  <h1 class="h4 mb-0">{{ student.nom }} {{ student.prenoms }}</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('students.edit_student', student_id=student.id) }}">Modifier</a>
+    <a class="btn btn-outline-secondary" href="{{ url_for('students.edit_student_cv', student_id=student.id) }}">CV Builder</a>
+    <a class="btn btn-outline-success" href="{{ url_for('students.download_student_cv_pdf', student_id=student.id) }}">CV PDF</a>
+    {% if current_user.role in ['FOUNDER', 'ADMIN_BRANCH', 'ADMIN'] %}
+    <form method="post" action="{{ url_for('students.delete_student', student_id=student.id) }}" data-confirm="Supprimer cet étudiant ? Cette action est irreversible.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-danger" type="submit">Supprimer</button>
+    </form>
+    {% endif %}
+    {% if active_case %}
+    <a class="btn btn-primary" href="{{ url_for('procedures.view_case', case_id=active_case.id) }}">Voir dossier étranger</a>
+    {% else %}
+    <a class="btn btn-primary" href="{{ url_for('procedures.create_case', student_id=student.id) }}">Créer dossier étranger</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-8">
+            <div><strong>Matricule:</strong> {{ student.matricule }}</div>
+            <div><strong>Branche/Pays:</strong> {{ student.branch.name if student.branch else '-' }}</div>
+            <div><strong>Filiere:</strong> {{ student.filiere }}</div>
+            <div><strong>Niveau:</strong> {{ student.niveau }}</div>
+            <div><strong>Promotion:</strong> {{ student.promotion }}</div>
+            <div><strong>Email:</strong> {{ student.email or '-' }}</div>
+            <div><strong>Email procedure:</strong> {{ student.procedure_email or '-' }}</div>
+            <div><strong>Mot de passe email procedure:</strong> {{ student.procedure_email_password or '-' }}</div>
+          </div>
+          <div class="col-md-4">
+            {% if student.photo_path %}
+            <img src="{{ url_for('static', filename='uploads/photos/' ~ student.photo_path) }}" class="img-fluid rounded border" alt="Photo étudiant">
+            {% else %}
+            <div class="border rounded p-3 text-muted text-center">Aucune photo</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">Parents/Responsables</div>
+      <ul class="list-group list-group-flush">
+        {% for g in guardians %}
+        <li class="list-group-item">{{ g.nom }} {{ g.prenoms }} - {{ g.lien_parente }}</li>
+        {% endfor %}
+      </ul>
+      <div class="card-body"><a class="btn btn-sm btn-primary" href="{{ url_for('students.create_guardian', student_id=student.id) }}">Ajouter</a></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">Dossiers documents</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('students.create_folder', student_id=student.id) }}" class="row g-2 mb-3">
+          {{ folder_form.hidden_tag() }}
+          <div class="col-md-8">{{ folder_form.folder_name.label(class_='form-label') }}{{ folder_form.folder_name(class_='form-control', placeholder='Ex: studentgator, admission_2026, visa_france') }}</div>
+          <div class="col-md-4 d-grid align-self-end">{{ folder_form.submit(class_='btn btn-outline-primary') }}</div>
+        </form>
+
+        <div class="d-flex flex-wrap gap-2">
+          {% for f in folder_cards %}
+          <a class="btn btn-sm {% if folder_filter == f.key %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{{ url_for('students.view_student', student_id=student.id, folder=f.key) }}">{{ f.label }}</a>
+          {% else %}
+          <div class="text-muted small">Aucun dossier créée. Crée un dossier pour commencer.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    {% if folder_filter %}
+    <div class="card mt-3">
+      <div class="card-header">Uploader dans {{ folder_labels.get(folder_filter, folder_filter|upper) }}</div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" action="{{ url_for('students.upload_document', student_id=student.id) }}">
+          {{ doc_form.hidden_tag() }}
+          {{ doc_form.folder(value=folder_filter) }}
+          <div class="mb-3">{{ doc_form.document_type.label(class_='form-label') }}{{ doc_form.document_type(class_='form-select') }}</div>
+          <div class="mb-3">{{ doc_form.file.label(class_='form-label') }}{{ doc_form.file(class_='form-control') }}</div>
+          {{ doc_form.submit(class_='btn btn-primary') }}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Documents du dossier{% if folder_filter %}: {{ folder_labels.get(folder_filter, folder_filter|upper) }}{% endif %}</div>
+      <div class="card-body border-bottom">
+        <form method="get" class="row g-2">
+          <input type="hidden" name="folder" value="{{ folder_filter }}">
+          <div class="col-md-10">
+            <label class="form-label mb-1">Filtrer par type</label>
+            <select class="form-select form-select-sm" name="doc_type">
+              <option value="">Tous</option>
+              {% for opt in type_options %}
+              <option value="{{ opt }}" {% if type_filter == opt %}selected{% endif %}>{{ opt }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 d-grid align-self-end">
+            <button class="btn btn-sm btn-outline-secondary" type="submit">Filtrer</button>
+          </div>
+        </form>
+      </div>
+      <div class="table-responsive">
+        <form id="mergeForm" method="post" action="{{ url_for('students.merge_documents', student_id=student.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="folder" value="{{ folder_filter }}">
+          <div class="d-flex flex-wrap gap-2 p-2 border-bottom">
+            <label class="small text-muted align-self-center mb-0">Taille cible:</label>
+            <select class="form-select form-select-sm" name="target_mb" style="width:auto;" form="mergeForm">
+              <option value="2">2 MB</option>
+              <option value="3">3 MB</option>
+              <option value="4" selected>4 MB</option>
+              <option value="5">5 MB</option>
+            </select>
+            <button class="btn btn-sm btn-primary" type="submit" form="mergeForm">Fusionner + compresser + telecharger</button>
+          </div>
+        </form>
+        <table class="table table-sm mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>Sel.</th>
+              <th>Ordre</th>
+              <th>Dossier</th>
+              <th>Type</th>
+              <th>Fichier</th>
+              <th>Taille</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in documents %}
+            <tr>
+              <td><input class="form-check-input" type="checkbox" name="doc_ids" value="{{ d.id }}" form="mergeForm"></td>
+              <td><input class="form-control form-control-sm" type="number" min="1" style="width:78px;" name="order_{{ d.id }}" value="{{ loop.index }}" form="mergeForm"></td>
+              <td>{{ folder_labels.get(d.target_folder, d.target_folder|upper) }}</td>
+              <td>{{ d.document_type }}</td>
+              <td>{{ d.original_filename }}</td>
+              <td>{% if d.size_bytes %}{{ (d.size_bytes / 1024)|round(1) }} KB{% else %}-{% endif %}</td>
+              <td>{{ d.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td class="d-flex gap-1">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('students.download_document', student_id=student.id, document_id=d.id) }}">Telecharger</a>
+                <form method="post" action="{{ url_for('students.delete_document', student_id=student.id, document_id=d.id) }}" data-confirm="Supprimer ce document ?">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-muted">Aucun document.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

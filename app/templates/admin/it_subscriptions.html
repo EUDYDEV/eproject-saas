@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Abonnements agences</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_settings') }}">Retour IT</a>
+</div>
+<div class="card">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <div class="col-md-8">
+        <label class="form-label mb-1">Recherche</label>
+        <input class="form-control" type="text" name="q" value="{{ q or '' }}" placeholder="Agence, propriétaire, email, statut, plan, reference">
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+      </div>
+      <div class="col-md-2 d-grid">
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_subscriptions') }}">Effacer</a>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Agence</th>
+            <th>Plan</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Reference depot</th>
+            <th>Debut</th>
+            <th>Fin</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.branch.name if r.branch else ('Branche #' ~ r.branch_id) }}</td>
+            <td>{{ (r.plan_code or 'starter')|upper }}</td>
+            <td>{{ '%.0f'|format(r.amount or 0) }} {{ r.currency or 'XOF' }}</td>
+            <td><span class="badge text-bg-{{ 'success' if r.status == 'active' else ('warning' if r.status in ['pending', 'pending_review'] else 'secondary') }}">{{ r.status }}</span></td>
+            <td>{{ r.payment_reference or '-' }}</td>
+            <td>{{ r.starts_at.strftime('%d/%m/%Y') if r.starts_at else '-' }}</td>
+            <td>{{ r.ends_at.strftime('%d/%m/%Y') if r.ends_at else '-' }}</td>
+            <td class="d-flex gap-1">
+              <form method="post" action="{{ url_for('admin.activate_subscription', subscription_id=r.id) }}" data-confirm="Activer cet abonnement pour 30 jours ?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-success" type="submit">Activer</button>
+              </form>
+              <form method="post" action="{{ url_for('admin.expire_subscription', subscription_id=r.id) }}" data-confirm="Marquer cet abonnement comme expire ?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Expirer</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-muted">Aucun abonnement pour le moment.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% if pagination and pagination.pages > 1 %}
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <div class="small text-muted">Page {{ pagination.page }} / {{ pagination.pages }}</div>
+  <div class="btn-group">
+    {% if pagination.has_prev %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_subscriptions', page=pagination.prev_num, q=q) }}">Precedent</a>
+    {% else %}
+    <button class="btn btn-outline-secondary" disabled>Precedent</button>
+    {% endif %}
+
+    {% if pagination.has_next %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_subscriptions', page=pagination.next_num, q=q) }}">Suivant</a>
+    {% else %}
+    <button class="btn btn-outline-secondary" disabled>Suivant</button>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+

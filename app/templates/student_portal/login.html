@@ -1,0 +1,88 @@
+﻿{% extends "student_portal/base.html" %}
+{% block content %}
+<style>
+  .sp-login-wrap {
+    min-height: calc(100vh - 2rem);
+    margin: -1rem -0.75rem;
+    padding: 1rem 0.75rem 2rem;
+    background:
+      radial-gradient(1100px 520px at 88% -12%, rgba(37,99,235,.34), transparent 60%),
+      radial-gradient(900px 440px at -18% 8%, rgba(14,165,233,.24), transparent 55%),
+      linear-gradient(180deg, #0f172a 0%, #0b1224 48%, #111827 100%);
+    color: #f8fafc;
+  }
+  .sp-login-card {
+    background: rgba(15,23,42,.75);
+    border: 1px solid rgba(148,163,184,.28);
+    border-radius: 16px;
+    box-shadow: 0 20px 42px rgba(2,6,23,.38);
+    backdrop-filter: blur(7px);
+  }
+  .sp-login-title {
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -.02em;
+  }
+  .sp-login-gradient {
+    background: linear-gradient(90deg, #38bdf8 0%, #3b82f6 60%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .sp-login-form .form-label {
+    color: #cbd5e1;
+    font-size: .9rem;
+  }
+  .sp-login-form .form-control {
+    background: rgba(15,23,42,.52);
+    border: 1px solid rgba(148,163,184,.38);
+    color: #f8fafc;
+  }
+  .sp-login-form .form-control:focus {
+    color: #fff;
+    background: rgba(15,23,42,.72);
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 .2rem rgba(59,130,246,.24);
+  }
+  .sp-login-tip {
+    border: 1px solid rgba(56,189,248,.34);
+    background: rgba(14,165,233,.12);
+    border-radius: 10px;
+    color: #dbeafe;
+  }
+</style>
+
+<div class="sp-login-wrap d-flex align-items-center">
+  <div class="container-lg">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-6">
+        <div class="text-uppercase small text-info fw-semibold mb-2">Espace Étudiant</div>
+        <h1 class="sp-login-title mb-3">Suivez votre <span class="sp-login-gradient">procedure d'etudes</span> en temps reel</h1>
+        <p class="text-light-emphasis mb-0">
+          Accedez a vos rendez-vous, documents et avancement de dossier depuis un seul espace personnel.
+        </p>
+      </div>
+
+      <div class="col-lg-5 ms-lg-auto">
+        <div class="sp-login-card p-4 p-lg-5">
+          <h2 class="h4 mb-3">Connexion étudiant</h2>
+          <form method="post" class="sp-login-form">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">{{ form.matricule.label(class_='form-label') }}{{ form.matricule(class_='form-control', placeholder='Ex: IF-2026-00001') }}</div>
+            <div class="mb-3">{{ form.password.label(class_='form-label') }}{{ form.password(class_='form-control', autocomplete='current-password', placeholder='Laisser vide au 1er acces') }}</div>
+            <div class="sp-login-tip small p-2 mb-3">
+              Premiere connexion: entre uniquement ton matricule. Une fois ton mot de passe defini, il sera demande a chaque connexion.
+            </div>
+            {{ form.submit(class_='btn btn-primary w-100 fw-semibold') }}
+          </form>
+          <div class="mt-3 d-flex gap-2">
+            <a class="btn btn-outline-light btn-sm" href="{{ url_for('auth.login') }}">Espace agence</a>
+            <a class="btn btn-outline-info btn-sm" href="{{ url_for('dashboard.index') }}">Accueil</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

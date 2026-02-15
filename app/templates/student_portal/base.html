@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Portail Étudiant - {{ site_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
+    <style>
+      .sp-shell {
+        min-height: 100vh;
+      }
+      .sp-sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, #0b2f7c 0%, #1547b8 55%, #1d4ed8 100%);
+        color: #fff;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        overflow-y: auto;
+        box-shadow: 8px 0 28px rgba(13, 52, 141, 0.28);
+      }
+      .sp-brand {
+        font-weight: 800;
+        letter-spacing: .03em;
+      }
+      .sp-profile-photo {
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255,255,255,.35);
+        box-shadow: 0 6px 18px rgba(2,6,23,.32);
+      }
+      .sp-nav .nav-link {
+        color: #f1f5f9;
+        border-radius: 10px;
+        margin-bottom: .4rem;
+        background: rgba(255,255,255,.10);
+        font-weight: 600;
+        padding: .55rem .75rem;
+      }
+      .sp-nav .nav-link:hover,
+      .sp-nav .nav-link.active {
+        color: #fff;
+        background: rgba(255,255,255,.24);
+      }
+      .sp-main {
+        margin-left: 280px;
+        min-height: 100vh;
+        background: radial-gradient(circle at 8% 0%, #eef3ff 0%, #f7f9ff 48%, #ffffff 100%);
+      }
+      .sp-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        background: rgba(255,255,255,.86);
+        backdrop-filter: blur(7px);
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .sp-topbar-photo {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .sp-hamburger {
+        width: 38px;
+        height: 34px;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        flex-direction: column;
+        background: #1d4ed8;
+        box-shadow: 0 6px 16px rgba(29, 78, 216, .28);
+      }
+      .sp-hamburger span {
+        display: block;
+        width: 16px;
+        height: 2px;
+        background: #fff;
+        border-radius: 2px;
+      }
+      .sp-sidebar-mobile {
+        --bs-offcanvas-width: 280px;
+        background: linear-gradient(180deg, #0b2f7c 0%, #1547b8 55%, #1d4ed8 100%);
+        color: #fff;
+      }
+      .sp-sidebar-mobile .offcanvas-header,
+      .sp-sidebar-mobile .offcanvas-body {
+        background: transparent;
+        color: #fff;
+      }
+      @media (max-width: 1199.98px) {
+        .sp-sidebar {
+          display: none;
+        }
+        .sp-main {
+          margin-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    {% set page_content %}{% block content %}{% endblock %}{% endset %}
+    {% if portal_student %}
+    <div class="sp-shell">
+      <aside class="sp-sidebar p-3">
+        <div class="sp-brand h5 mb-3">{{ site_name }}</div>
+        <div class="text-center mb-4">
+          {% if portal_student_photo_url %}
+          <img src="{{ portal_student_photo_url }}" class="sp-profile-photo mb-2" alt="Photo profil">
+          {% else %}
+          <img src="https://ui-avatars.com/api/?name={{ (portal_student.prenoms or '') ~ '+' ~ (portal_student.nom or '') }}&background=0b2f7c&color=ffffff&size=96" class="sp-profile-photo mb-2" alt="Photo profil">
+          {% endif %}
+          <div class="fw-semibold">{{ portal_student.prenoms }} {{ portal_student.nom }}</div>
+          <div class="small text-white-50">{{ portal_student.matricule }}</div>
+        </div>
+
+        <nav class="sp-nav nav flex-column">
+          <a class="nav-link" href="{{ url_for('student_portal.dashboard') }}">Tableau de bord</a>
+          <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='profil') }}">Mon profil</a>
+          <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='documents') }}">Documents</a>
+          <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='rdv') }}">Rendez-vous</a>
+          <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='payments') }}">Paiements</a>
+          <a class="nav-link" href="{{ url_for('student_portal.change_password') }}">Mot de passe</a>
+        </nav>
+
+        <div class="mt-4 d-grid">
+          <a class="btn btn-light btn-sm" href="{{ url_for('student_portal.logout') }}">Se deconnecter</a>
+        </div>
+      </aside>
+
+      <aside class="offcanvas offcanvas-start sp-sidebar-mobile" tabindex="-1" id="studentSidebar" aria-labelledby="studentSidebarLabel">
+        <div class="offcanvas-header border-bottom border-light border-opacity-25">
+          <h5 class="offcanvas-title sp-brand" id="studentSidebarLabel">{{ site_name }}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fermer"></button>
+        </div>
+        <div class="offcanvas-body p-3">
+          <div class="text-center mb-4">
+            {% if portal_student_photo_url %}
+            <img src="{{ portal_student_photo_url }}" class="sp-profile-photo mb-2" alt="Photo profil">
+            {% else %}
+            <img src="https://ui-avatars.com/api/?name={{ (portal_student.prenoms or '') ~ '+' ~ (portal_student.nom or '') }}&background=0b2f7c&color=ffffff&size=96" class="sp-profile-photo mb-2" alt="Photo profil">
+            {% endif %}
+            <div class="fw-semibold">{{ portal_student.prenoms }} {{ portal_student.nom }}</div>
+            <div class="small text-white-50">{{ portal_student.matricule }}</div>
+          </div>
+          <nav class="sp-nav nav flex-column">
+            <a class="nav-link" href="{{ url_for('student_portal.dashboard') }}" data-bs-dismiss="offcanvas">Tableau de bord</a>
+            <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='profil') }}" data-bs-dismiss="offcanvas">Mon profil</a>
+            <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='documents') }}" data-bs-dismiss="offcanvas">Documents</a>
+            <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='rdv') }}" data-bs-dismiss="offcanvas">Rendez-vous</a>
+            <a class="nav-link" href="{{ url_for('student_portal.dashboard', _anchor='payments') }}" data-bs-dismiss="offcanvas">Paiements</a>
+            <a class="nav-link" href="{{ url_for('student_portal.change_password') }}" data-bs-dismiss="offcanvas">Mot de passe</a>
+          </nav>
+          <div class="mt-4 d-grid">
+            <a class="btn btn-light btn-sm" href="{{ url_for('student_portal.logout') }}">Se deconnecter</a>
+          </div>
+        </div>
+      </aside>
+
+      <main class="sp-main">
+        <header class="sp-topbar px-3 px-lg-4 py-2 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <button class="sp-hamburger d-xl-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#studentSidebar" aria-controls="studentSidebar" aria-label="Ouvrir menu">
+              <span></span><span></span><span></span>
+            </button>
+            <div class="fw-semibold">Portail Étudiant</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            {% if portal_student_photo_url %}
+            <img src="{{ portal_student_photo_url }}" class="sp-topbar-photo" alt="Photo">
+            {% else %}
+            <img src="https://ui-avatars.com/api/?name={{ (portal_student.prenoms or '') ~ '+' ~ (portal_student.nom or '') }}&background=0b2f7c&color=ffffff&size=64" class="sp-topbar-photo" alt="Photo">
+            {% endif %}
+            <div class="small fw-semibold">{{ portal_student.prenoms }} {{ portal_student.nom }}</div>
+          </div>
+        </header>
+
+        <section class="p-3 p-lg-4">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          {{ page_content }}
+        </section>
+      </main>
+    </div>
+    {% else %}
+    <div class="{% if request.endpoint == 'student_portal.login' %}container-fluid p-0{% else %}container py-4{% endif %}">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {{ page_content }}
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var sidebar = document.getElementById('studentSidebar');
+        if (!sidebar || !window.bootstrap || !window.bootstrap.Offcanvas) {
+          return;
+        }
+
+        var offcanvas = bootstrap.Offcanvas.getOrCreateInstance(sidebar);
+        var links = sidebar.querySelectorAll('a.nav-link, a.btn');
+
+        links.forEach(function (link) {
+          link.addEventListener('click', function () {
+            offcanvas.hide();
+          });
+        });
+      });
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+

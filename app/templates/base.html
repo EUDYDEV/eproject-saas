@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% set endpoint = request.endpoint or '' %}
+    {% set seo_title %}{% block meta_title %}{{ site_name }} | Plateforme SaaS{% endblock %}{% endset %}
+    {% set seo_description %}{% block meta_description %}{{ site_tagline or 'Plateforme SaaS de gestion des agences étudiants' }}{% endblock %}{% endset %}
+    {% set seo_canonical %}{% block meta_canonical %}{{ request.base_url }}{% endblock %}{% endset %}
+    {% set should_noindex = current_user.is_authenticated or endpoint.startswith('auth.') or endpoint.startswith('student_portal.') %}
+    <title>{{ seo_title|striptags }}</title>
+    <meta name="description" content="{{ seo_description|striptags }}">
+    <link rel="canonical" href="{{ seo_canonical }}">
+    {% if should_noindex %}
+    <meta name="robots" content="noindex,nofollow,noarchive">
+    {% else %}
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    {% endif %}
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:title" content="{{ seo_title|striptags }}">
+    <meta property="og:description" content="{{ seo_description|striptags }}">
+    <meta property="og:url" content="{{ seo_canonical }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ seo_title|striptags }}">
+    <meta name="twitter:description" content="{{ seo_description|striptags }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
+    <style>
+      /* Critical sidebar fallback style (prevents broken mixed view if static CSS is stale) */
+      .sidebar-desktop,
+      .sidebar-mobile {
+        width: 260px;
+        background: linear-gradient(180deg, #0b2f7c 0%, #1547b8 55%, #1d4ed8 100%);
+        color: #fff;
+      }
+      .sidebar-brand {
+        color: #fff !important;
+        border-bottom-color: rgba(255, 255, 255, 0.25) !important;
+      }
+      .sidebar-nav .nav-link {
+        color: #f8fafc !important;
+        background: rgba(255, 255, 255, 0.10) !important;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        padding: 0.55rem 0.75rem;
+      }
+      .sidebar-nav .nav-link:hover {
+        color: #fff !important;
+        background: rgba(255, 255, 255, 0.22) !important;
+      }
+      .sidebar-nav .nav-link.active {
+        color: #fff !important;
+        background: rgba(255, 255, 255, 0.30) !important;
+        border: 1px solid rgba(255, 255, 255, 0.55);
+      }
+      .it-saas-sidebar {
+        background:
+          radial-gradient(1200px 520px at 85% -10%, rgba(37,99,235,.30), transparent 60%),
+          radial-gradient(1100px 500px at -15% 10%, rgba(14,165,233,.22), transparent 55%),
+          linear-gradient(180deg, #0f172a 0%, #0b1224 45%, #111827 100%) !important;
+        color: #f8fafc;
+      }
+      .it-saas-sidebar .offcanvas-header,
+      .it-saas-sidebar .offcanvas-body {
+        background:
+          radial-gradient(1200px 520px at 85% -10%, rgba(37,99,235,.30), transparent 60%),
+          radial-gradient(1100px 500px at -15% 10%, rgba(14,165,233,.22), transparent 55%),
+          linear-gradient(180deg, #0f172a 0%, #0b1224 45%, #111827 100%) !important;
+      }
+      .it-saas-sidebar .sidebar-brand {
+        border-bottom-color: rgba(148, 163, 184, 0.35) !important;
+      }
+      .it-saas-sidebar .sidebar-nav .nav-link {
+        background: rgba(30, 41, 59, 0.52) !important;
+        color: #e2e8f0 !important;
+      }
+      .it-saas-sidebar .sidebar-nav .nav-link:hover {
+        background: rgba(59, 130, 246, 0.30) !important;
+        color: #ffffff !important;
+      }
+      .it-saas-sidebar .sidebar-nav .nav-link.active {
+        background: rgba(56, 189, 248, 0.24) !important;
+        border: 1px solid rgba(56, 189, 248, 0.55) !important;
+      }
+      .sidebar-mobile {
+        --bs-offcanvas-width: 260px;
+      }
+      .sidebar-mobile .offcanvas-body {
+        display: flex;
+        flex-direction: column;
+      }
+      @media (max-width: 1199.98px) {
+        .sidebar-desktop { display: none !important; }
+      }
+      @media (min-width: 1200px) {
+        .sidebar-mobile { display: none !important; }
+      }
+      .subscription-popup {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(2, 6, 23, 0.38);
+        animation: popupFadeIn .25s ease-out;
+      }
+      .subscription-popup-card {
+        width: min(520px, 100%);
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 20px 40px rgba(2, 6, 23, 0.28);
+        border: 1px solid #d1fae5;
+        padding: 1.1rem 1.1rem;
+      }
+      .subscription-popup-head {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 0.5rem;
+      }
+      .check-anim {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #16a34a;
+        position: relative;
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, .45);
+        animation: pulseGreen 1.4s ease-out infinite;
+        flex: 0 0 auto;
+      }
+      .check-anim::after {
+        content: "";
+        position: absolute;
+        left: 11px;
+        top: 8px;
+        width: 10px;
+        height: 16px;
+        border: solid #fff;
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+        animation: checkPop .28s ease-out;
+      }
+      @keyframes pulseGreen {
+        0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, .45); }
+        70% { box-shadow: 0 0 0 16px rgba(22, 163, 74, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+      }
+      @keyframes checkPop {
+        from { transform: rotate(45deg) scale(0.4); opacity: 0; }
+        to { transform: rotate(45deg) scale(1); opacity: 1; }
+      }
+      @keyframes popupFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    {% if current_user.is_authenticated %}
+      {% if not subscription_lock %}
+      <div class="app-shell">
+        <aside class="sidebar-desktop d-none d-xl-flex {% if is_platform_super_admin and it_ui_mode == "saas" %}it-saas-sidebar{% endif %}">
+          <div class="sidebar-brand p-3 fw-bold border-bottom">{% if workspace_logo_url %}<img src="{{ workspace_logo_url }}" alt="{{ workspace_name }}" style="max-height:26px;" class="me-2">{% endif %}{{ workspace_name }}</div>
+          {% include "_sidebar_nav.html" %}
+        </aside>
+
+        <aside class="sidebar-mobile offcanvas offcanvas-start {% if is_platform_super_admin and it_ui_mode == "saas" %}it-saas-sidebar{% endif %}" tabindex="-1" id="appSidebar">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title">{{ site_name }}</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+          </div>
+          <div class="offcanvas-body p-0">
+            <div class="sidebar-brand p-3 fw-bold border-bottom">{% if workspace_logo_url %}<img src="{{ workspace_logo_url }}" alt="{{ workspace_name }}" style="max-height:26px;" class="me-2">{% endif %}{{ workspace_name }}</div>
+            {% include "_sidebar_nav.html" %}
+          </div>
+        </aside>
+        <main class="content">
+          <header class="topbar border-bottom bg-white px-3 py-2">
+            <div class="topbar-main">
+              <div class="topbar-topline">
+                <button class="btn btn-outline-secondary d-xl-none topbar-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar">Menu</button>
+                <div class="fw-semibold topbar-title" title="{{ workspace_name }}">{{ workspace_name }}</div>
+              </div>
+              <div class="topbar-actions d-flex align-items-center gap-2">
+                {% if is_platform_super_admin %}
+                <a class="btn btn-sm {% if request.endpoint == 'dashboard.it_saas_dashboard' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{{ url_for('dashboard.it_saas_dashboard') }}">Vue SaaS</a>
+                <a class="btn btn-sm {% if request.args.get('agency_view') == '1' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{{ url_for('dashboard.it_agency_dashboard') }}">Vue agence</a>
+                {% set chat_total_unread = (chat_unread_messages or 0) + (chat_unread_alerts or 0) %}
+                {% set subscription_unread_total = (subscription_unread_alerts or 0) %}
+                {% set chat_notif_href = url_for('dashboard.chat_room', branch_id=chat_notification_branch_id) if chat_notification_branch_id else url_for('dashboard.chat_room') %}
+                {% if it_ui_mode == 'saas' %}
+                <a class="btn btn-sm {% if request.endpoint == 'admin.it_subscriptions' %}btn-primary{% else %}btn-outline-danger{% endif %} position-relative" href="{{ url_for('admin.it_subscriptions') }}" title="Notifications abonnement">
+                  Abonnements
+                  {% if subscription_unread_total %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ subscription_unread_total }}</span>
+                  {% endif %}
+                </a>
+                {% endif %}
+
+                {% if it_ui_mode == 'saas' %}
+                <a class="btn btn-sm {% if request.endpoint == 'dashboard.chat_room' %}btn-primary{% else %}btn-outline-danger{% endif %} position-relative" href="{{ chat_notif_href }}" title="Notifications service clients">
+                  Cloche
+                  {% if chat_total_unread %}
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ chat_total_unread }}</span>
+                  {% endif %}
+                </a>
+                {% endif %}
+                {% endif %}
+                {% if request.path.startswith('/students') %}
+                <a class="btn btn-sm btn-success" href="{{ url_for('students.export_students_csv') }}">Exporter Excel</a>
+                {% endif %}
+                {% if current_user.avatar_path %}
+                <img src="{{ url_for('static', filename=current_user.avatar_path) }}" alt="Photo profil" class="topbar-user-photo">
+                {% else %}
+                <span class="topbar-user-photo topbar-user-fallback">{{ ((current_user.display_name or current_user.username or 'U')[:1])|upper }}</span>
+                {% endif %}
+                <span class="badge text-bg-light">{{ current_user.display_name or current_user.username }}</span>
+                <span class="badge text-bg-primary topbar-hide-mobile">{{ workspace_name }}</span>
+                <span class="badge text-bg-light topbar-hide-mobile">{{ current_user.role }}</span>
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('auth.logout') }}">Logout</a>
+              </div>
+            </div>
+          </header>
+          <section class="p-3 p-lg-4">
+      {% else %}
+      <div class="container py-3">
+      {% endif %}
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                {% if category == 'subscription_popup' %}
+                <div class="subscription-popup" data-subscription-popup="1">
+                  <div class="subscription-popup-card">
+                    <div class="subscription-popup-head">
+                      <span class="check-anim" aria-hidden="true"></span>
+                      <div class="fw-semibold text-success">Paiement enregistré</div>
+                    </div>
+                    <div>{{ message }}</div>
+                  </div>
+                </div>
+                {% else %}
+                <div class="alert alert-{{ category }}{% if not subscription_lock %} alert-dismissible fade show{% endif %}" role="alert">
+                  {{ message }}
+                  {% if not subscription_lock %}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  {% endif %}
+                </div>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          {% block content %}{% endblock %}
+      {% if not subscription_lock %}
+          </section>
+        </main>
+      </div>
+      {% else %}
+      </div>
+      {% endif %}
+    {% else %}
+      <div class="container-fluid py-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              {% if category == 'subscription_popup' %}
+              <div class="subscription-popup" data-subscription-popup="1">
+                <div class="subscription-popup-card">
+                  <div class="subscription-popup-head">
+                    <span class="check-anim" aria-hidden="true"></span>
+                    <div class="fw-semibold text-success">Paiement enregistré</div>
+                  </div>
+                  <div>{{ message }}</div>
+                </div>
+              </div>
+              {% else %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        {% block auth_content %}{% endblock %}
+      </div>
+    {% endif %}
+
+    <div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+          </div>
+          <div class="modal-body" id="confirmActionMessage">Confirmer cette action ?</div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-danger" id="confirmActionSubmit">Confirmer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      (function () {
+        const topbar = document.querySelector(".topbar");
+        if (topbar) {
+          const updateTopbarOffset = function () {
+            const h = Math.ceil(topbar.getBoundingClientRect().height || 64);
+            document.body.style.setProperty("--topbar-h", h + "px");
+          };
+          updateTopbarOffset();
+          window.addEventListener("resize", updateTopbarOffset);
+          window.addEventListener("orientationchange", updateTopbarOffset);
+          const observer = new MutationObserver(updateTopbarOffset);
+          observer.observe(topbar, { childList: true, subtree: true, attributes: true });
+        }
+
+        const modalEl = document.getElementById("confirmActionModal");
+        if (!modalEl || !window.bootstrap) return;
+        const modal = new bootstrap.Modal(modalEl);
+        const messageEl = document.getElementById("confirmActionMessage");
+        const submitBtn = document.getElementById("confirmActionSubmit");
+        let pendingForm = null;
+
+        document.addEventListener("submit", function (e) {
+          const form = e.target;
+          if (!form || !form.matches("form[data-confirm]")) return;
+          if (form.dataset.confirmed === "1") {
+            form.dataset.confirmed = "";
+            return;
+          }
+          e.preventDefault();
+          pendingForm = form;
+          messageEl.textContent = form.getAttribute("data-confirm") || "Confirmer cette action ?";
+          modal.show();
+        });
+
+        submitBtn.addEventListener("click", function () {
+          if (!pendingForm) return;
+          pendingForm.dataset.confirmed = "1";
+          modal.hide();
+          pendingForm.submit();
+        });
+
+        const popup = document.querySelector("[data-subscription-popup='1']");
+        if (popup) {
+          setTimeout(function () {
+            popup.style.transition = "opacity .3s ease";
+            popup.style.opacity = "0";
+            setTimeout(function () { popup.remove(); }, 320);
+          }, 5200);
+          popup.addEventListener("click", function () {
+            popup.remove();
+          });
+        }
+      })();
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+
+
+
+
+
+
+
+
+
+

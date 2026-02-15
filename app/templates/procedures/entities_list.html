@@ -1,0 +1,53 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Entites partenaires</h1>
+  <a class="btn btn-primary" href="{{ url_for('procedures.create_entity') }}">Nouvelle entite</a>
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-12 col-md-5">
+    <input class="form-control" type="text" name="q" value="{{ q or '' }}" placeholder="Recherche entite">
+  </div>
+  <div class="col-12 col-md-4">
+    <select class="form-select" name="branch_id">
+      <option value="0">Toutes les branches</option>
+      {% for b in branch_filter_options %}
+      <option value="{{ b.id }}" {% if branch_filter == b.id %}selected{% endif %}>{{ b.name }} ({{ b.country_code }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-3 d-grid">
+    <button class="btn btn-outline-primary" type="submit">Filtrer</button>
+  </div>
+</form>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-striped mb-0">
+      <thead><tr><th>Nom</th><th>Partenaire</th><th>Notes</th><th></th></tr></thead>
+      <tbody>
+      {% for e in entities %}
+      <tr>
+        <td>{{ e.name }}</td>
+        <td>{{ 'Oui' if e.is_partner else 'Non' }}</td>
+        <td>{{ e.notes or '-' }}</td>
+        <td class="d-flex gap-2">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('procedures.edit_entity', entity_id=e.id) }}">Modifier</a>
+          <form method="post" action="{{ url_for('procedures.delete_entity', entity_id=e.id) }}" onsubmit="return confirm('Supprimer cette entite ?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="text-muted">Aucune entite.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+

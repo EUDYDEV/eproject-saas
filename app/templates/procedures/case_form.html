@@ -1,0 +1,103 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">{{ 'Modifier' if mode == 'edit' else 'Nouveau' }} dossier étranger</h1>
+<div class="card"><div class="card-body">
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <div class="row g-3">
+      <div class="col-lg-6">
+        <label class="form-label" for="studentSearchInput">Étudiant (recherche nom ou matricule)</label>
+        <input
+          id="studentSearchInput"
+          type="text"
+          class="form-control"
+          placeholder="Ex: IF-2026-00001 ou Kouame"
+          value="{{ selected_student_label or '' }}"
+          autocomplete="off"
+        >
+        {{ form.student_id(class_='d-none') }}
+        {% if form.student_id.errors %}
+        <div class="text-danger small mt-1">{{ form.student_id.errors[0] }}</div>
+        {% endif %}
+        <div id="studentSearchResults" class="list-group mt-1"></div>
+        <div class="form-text">Les étudiants deja marques a l'étranger ne sont pas proposes.</div>
+      </div>
+      <div class="col-lg-3">{{ form.destination_country.label(class_='form-label') }}{{ form.destination_country(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.destination_city.label(class_='form-label') }}{{ form.destination_city(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.entity_id.label(class_='form-label') }}{{ form.entity_id(class_='form-select') }}</div>
+      <div class="col-lg-3">{{ form.school_id.label(class_='form-label') }}{{ form.school_id(class_='form-select') }}</div>
+      <div class="col-lg-3">{{ form.status.label(class_='form-label') }}{{ form.status(class_='form-select') }}</div>
+      <div class="col-lg-3 d-flex align-items-end"><div class="form-check">{{ form.is_active(class_='form-check-input') }} {{ form.is_active.label(class_='form-check-label') }}</div></div>
+      <div class="col-lg-3">{{ form.start_date.label(class_='form-label') }}{{ form.start_date(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.expected_departure_date.label(class_='form-label') }}{{ form.expected_departure_date(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.actual_departure_date.label(class_='form-label') }}{{ form.actual_departure_date(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.arrival_date.label(class_='form-label') }}{{ form.arrival_date(class_='form-control') }}</div>
+    </div>
+    <div class="mt-3">
+      {{ form.submit(class_='btn btn-primary') }}
+      <a class="btn btn-outline-secondary" href="{{ url_for('procedures.list_cases') }}">Retour</a>
+    </div>
+  </form>
+</div></div>
+
+<script>
+(() => {
+  const input = document.getElementById("studentSearchInput");
+  const select = document.getElementById("{{ form.student_id.id }}");
+  const results = document.getElementById("studentSearchResults");
+  if (!input || !select || !results) return;
+
+  let timer = null;
+  const searchUrl = "{{ url_for('procedures.search_students') }}";
+
+  function clearResults() {
+    results.innerHTML = "";
+  }
+
+  function chooseStudent(item) {
+    let option = Array.from(select.options).find(o => String(o.value) === String(item.id));
+    if (!option) {
+      option = new Option(item.label, String(item.id), true, true);
+      select.add(option);
+    }
+    select.value = String(item.id);
+    input.value = item.label;
+    clearResults();
+  }
+
+  input.addEventListener("input", () => {
+    const q = (input.value || "").trim();
+    if (timer) clearTimeout(timer);
+    if (q.length < 2) {
+      clearResults();
+      return;
+    }
+
+    timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`${searchUrl}?q=${encodeURIComponent(q)}`);
+        if (!response.ok) return;
+        const payload = await response.json();
+        const items = payload.results || [];
+        if (!items.length) {
+          results.innerHTML = "<div class='list-group-item text-muted'>Aucun étudiant trouve</div>";
+          return;
+        }
+        results.innerHTML = items.map(item => (
+          `<button type="button" class="list-group-item list-group-item-action" data-student-id="${item.id}" data-student-label="${item.label}">${item.label}</button>`
+        )).join("");
+      } catch (e) {
+        clearResults();
+      }
+    }, 180);
+  });
+
+  results.addEventListener("click", (event) => {
+    const btn = event.target.closest("button[data-student-id]");
+    if (!btn) return;
+    chooseStudent({ id: btn.dataset.studentId, label: btn.dataset.studentLabel });
+  });
+})();
+</script>
+{% endblock %}
+

@@ -1,0 +1,18 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">{% if mode == 'create' %}Nouvelle branche{% else %}Modifier branche{% endif %}</h1>
+<form method="post" enctype="multipart/form-data" class="row g-3">
+{{ form.hidden_tag() }}
+<div class="col-md-4">{{ form.name.label(class_='form-label') }}{{ form.name(class_='form-control') }}</div>
+<div class="col-md-2">{{ form.country_code.label(class_='form-label') }}{{ form.country_code(class_='form-control') }}</div>
+<div class="col-md-3">{{ form.city.label(class_='form-label') }}{{ form.city(class_='form-control') }}</div>
+<div class="col-md-3">{{ form.timezone.label(class_='form-label') }}{{ form.timezone(class_='form-control') }}</div>
+<div class="col-md-6">{{ form.address.label(class_='form-label') }}{{ form.address(class_='form-control') }}</div>
+<div class="col-md-3">{{ form.phone.label(class_='form-label') }}{{ form.phone(class_='form-control') }}</div>
+<div class="col-md-3">{{ form.email.label(class_='form-label') }}{{ form.email(class_='form-control') }}</div>
+<div class="col-12">{{ form.website_url.label(class_='form-label') }}{{ form.website_url(class_='form-control', placeholder='https://...') }}</div>
+<div class="col-12">{{ form.logo_file.label(class_='form-label') }}{{ form.logo_file(class_='form-control') }}<div class="form-text">PNG/JPG/WEBP, 5MB max.</div></div>
+<div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+</form>
+{% endblock %}
+

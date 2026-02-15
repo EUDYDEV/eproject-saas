@@ -1,0 +1,130 @@
+﻿{% extends "base.html" %}
+{% block meta_title %}{{ site_name }} | CRM etudes a l'étranger{% endblock %}
+{% block meta_description %}{{ site_name }}: plateforme SaaS pour agences de voyage et etudes a l'étranger. Gestion étudiants, RDV, emails, documents et suivi multi-branches.{% endblock %}
+{% block meta_canonical %}{{ request.base_url }}{% endblock %}
+{% block auth_content %}
+<style>
+  .lp-wrap { min-height: 100vh; background:
+      radial-gradient(1200px 520px at 85% -10%, rgba(37,99,235,.30), transparent 60%),
+      radial-gradient(1100px 500px at -15% 10%, rgba(14,165,233,.22), transparent 55%),
+      linear-gradient(180deg, #0f172a 0%, #0b1224 45%, #111827 100%); color: #f8fafc; margin: -1rem -0.75rem 0; padding: 1rem 0.75rem 2rem; }
+  .lp-card { background: rgba(15,23,42,.75); border: 1px solid rgba(148,163,184,.2); border-radius: 16px; backdrop-filter: blur(6px); }
+  .lp-hero-title { font-size: clamp(2rem, 4vw, 4rem); line-height: 1.05; font-weight: 800; letter-spacing: -.02em; }
+  .lp-gradient { background: linear-gradient(90deg, #38bdf8 0%, #3b82f6 60%, #2563eb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .lp-plan { transition: transform .25s ease, box-shadow .25s ease; }
+  .lp-plan:hover { transform: translateY(-5px); box-shadow: 0 18px 38px rgba(2,6,23,.35); }
+  .lp-price { font-size: 2rem; font-weight: 800; }
+  .lp-kpi { background: rgba(30,41,59,.55); border: 1px solid rgba(148,163,184,.25); border-radius: 12px; }
+  @media (min-width: 1400px){ .lp-wrap { padding-left: 2rem; padding-right: 2rem; } .lp-card { border-radius: 20px; } }
+  .public-nav-brand { color: #fff; text-decoration: none; }
+  .public-nav-brand:hover { color: #e2e8f0; }
+  .public-nav-link { color: #cbd5e1; text-decoration: none; }
+  .public-nav-link:hover { color: #fff; }
+</style>
+
+<div class="lp-wrap">
+  <div class="container-xxl">
+    {% include "_public_nav.html" %}
+
+    <section class="lp-card p-4 p-lg-5 mb-4">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <div class="text-uppercase small text-info fw-semibold mb-2">Plateforme SaaS Multi-Agences</div>
+          <h1 class="lp-hero-title mb-3">Pilotez votre <span class="lp-gradient">agence d'etudes</span> comme un pro.</h1>
+          <p class="lead text-light-emphasis mb-4">CRM étudiants, procedures internationales, RDV intelligents, emails pro, commissions partenaires et suivi multi-pays sur un seul dashboard.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-primary btn-lg" href="#abonnements">Voir les abonnements</a>
+            <a class="btn btn-outline-light btn-lg" href="#inscription">Créer mon agence</a>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="row g-2">
+            <div class="col-6"><div class="lp-kpi p-3"><div class="small text-secondary">Modules</div><div class="fs-3 fw-bold">12+</div></div></div>
+            <div class="col-6"><div class="lp-kpi p-3"><div class="small text-secondary">Roles</div><div class="fs-3 fw-bold">IT / Founder / Admin</div></div></div>
+            <div class="col-12"><div class="lp-kpi p-3"><div class="small text-secondary">Email Pro</div><div class="fw-semibold">Chaque agence envoie avec son SMTP, pas celui de la plateforme IT.</div></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="abonnements" class="mb-4">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <h2 class="h3 mb-0">Plans d'abonnement</h2>
+        <div class="small text-secondary">Si IT n'a pas configure les prix: tous les plans restent a 0.</div>
+      </div>
+      <div class="row g-3">
+        {% for plan in plans %}
+        <div class="col-md-4">
+          <div class="lp-card lp-plan p-4 h-100">
+            <div class="text-info text-uppercase small fw-semibold">{{ plan.name }}</div>
+            <div class="lp-price my-2">{{ '%.0f'|format(plan.price or 0) }} <span class="fs-6 fw-normal">{{ plan.currency }}/mois</span></div>
+            <ul class="small text-light-emphasis ps-3">
+              {% for f in plan.features %}
+              <li>{{ f }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section id="inscription" class="lp-card p-4 p-lg-5">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <h3 class="h4">Créer votre agence</h3>
+          <p class="text-light-emphasis">Apres creation, vous pouvez payer puis etre active par le compte IT. Une fois actif, vous accedez directement au dashboard de votre agence.</p>
+          <div class="d-flex flex-wrap gap-2">
+            {% if plan_payment_links and plan_payment_links.starter %}
+            <a class="btn btn-outline-info" href="{{ plan_payment_links.starter }}" target="_blank" rel="noopener">Payer Starter</a>
+            {% endif %}
+            {% if plan_payment_links and plan_payment_links.pro %}
+            <a class="btn btn-outline-info" href="{{ plan_payment_links.pro }}" target="_blank" rel="noopener">Payer Pro</a>
+            {% endif %}
+            {% if plan_payment_links and plan_payment_links.enterprise %}
+            <a class="btn btn-outline-info" href="{{ plan_payment_links.enterprise }}" target="_blank" rel="noopener">Payer Enterprise</a>
+            {% endif %}
+            {% if (not plan_payment_links or (not plan_payment_links.starter and not plan_payment_links.pro and not plan_payment_links.enterprise)) and payment_link %}
+            <a class="btn btn-outline-info" href="{{ payment_link }}" target="_blank" rel="noopener">Lien de paiement Wave</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <form method="post" action="{{ url_for('auth.signup_agency') }}" class="row g-3">
+            {{ signup_form.hidden_tag() }}
+            <div class="col-md-6">{{ signup_form.agency_name.label(class_='form-label') }}{{ signup_form.agency_name(class_='form-control', placeholder='Ex: Innov Gabon') }}</div>
+            <div class="col-md-6">{{ signup_form.country_code.label(class_='form-label') }}{{ signup_form.country_code(class_='form-control', placeholder='CI / GA / ML / RW') }}</div>
+            <div class="col-md-6">{{ signup_form.city.label(class_='form-label') }}{{ signup_form.city(class_='form-control', placeholder='Abidjan') }}</div>
+            <div class="col-md-6">{{ signup_form.plan_code.label(class_='form-label') }}{{ signup_form.plan_code(class_='form-select') }}</div>
+            <div class="col-md-6">{{ signup_form.founder_name.label(class_='form-label') }}{{ signup_form.founder_name(class_='form-control', placeholder='Nom utilisateur') }}</div>
+            <div class="col-md-6">{{ signup_form.founder_email.label(class_='form-label') }}{{ signup_form.founder_email(class_='form-control', placeholder='email@agence.com') }}</div>
+            <div class="col-md-12">{{ signup_form.password.label(class_='form-label') }}{{ signup_form.password(class_='form-control', placeholder='Mot de passe securise') }}</div>
+            <div class="col-12 d-grid">{{ signup_form.submit(class_='btn btn-primary btn-lg') }}</div>
+          </form>
+        </div>
+      </div>
+    </section>
+    <footer class="mt-4 pt-4 border-top border-secondary-subtle">
+      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+        <div>
+          <div class="fw-semibold">{{ site_name }}</div>
+          <div class="small text-light-emphasis">{{ site_footer_text or site_name }}</div>
+        </div>
+        <div class="d-flex flex-wrap gap-3 small">
+          <a class="text-light text-decoration-none" href="{{ url_for('dashboard.public_about') }}">À propos</a>
+          <a class="text-light text-decoration-none" href="{{ url_for('dashboard.public_services') }}">Nos services</a>
+          <a class="text-light text-decoration-none" href="{{ url_for('dashboard.public_contact') }}">Contact</a>
+          <a class="text-light text-decoration-none" href="{{ url_for('auth.login') }}">Connexion</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+

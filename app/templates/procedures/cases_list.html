@@ -1,0 +1,65 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Dossiers étranger</h1>
+  <a class="btn btn-primary" href="{{ url_for('procedures.create_case', branch_id=branch_filter if branch_filter else None) }}">Nouveau dossier</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+  <div class="col-12 col-md-4">
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Recherche étudiant/pays">
+  </div>
+  <div class="col-12 col-md-4">
+    <select class="form-select" name="branch_id">
+      <option value="0">Toutes les branches</option>
+      {% for b in branch_filter_options %}
+      <option value="{{ b.id }}" {% if branch_filter == b.id %}selected{% endif %}>{{ b.name }} ({{ b.country_code }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-2">
+    <button class="btn btn-outline-secondary w-100">Filtrer</button>
+  </div>
+</form>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-striped mb-0">
+      <thead>
+        <tr>
+          <th>Étudiant</th>
+          <th>Destination</th>
+          <th>Entite / Ecole</th>
+          <th>Statut</th>
+          <th>Actif</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for c in cases %}
+      <tr>
+        <td>{{ c.student.matricule if c.student else '-' }}<br><small class="text-muted">{{ c.student.nom }} {{ c.student.prenoms }}</small></td>
+        <td>{{ c.destination_country or '-' }} / {{ c.destination_city or '-' }}</td>
+        <td>{{ c.entity.name if c.entity else '-' }} / {{ c.school.name if c.school else '-' }}</td>
+        <td><span class="badge text-bg-light">{{ c.status }}</span></td>
+        <td>{{ 'Oui' if c.is_active else 'Non' }}</td>
+        <td class="d-flex gap-1">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('procedures.view_case', case_id=c.id) }}">Ouvrir</a>
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('students.view_student', student_id=c.student_id) }}">Fiche étudiant</a>
+          {% if current_user.role in ['FOUNDER', 'ADMIN_BRANCH', 'ADMIN'] %}
+          <form method="post" action="{{ url_for('procedures.delete_case', case_id=c.id) }}" data-confirm="Supprimer ce dossier procedure ?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer dossier</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted">Aucun dossier.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+
+

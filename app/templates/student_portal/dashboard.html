@@ -1,0 +1,353 @@
+{% extends "student_portal/base.html" %}
+{% block content %}
+<style>
+  .sp-hero {
+    background:
+      radial-gradient(900px 380px at 88% -20%, rgba(56,189,248,.26), transparent 60%),
+      linear-gradient(120deg, #0b3a8f 0%, #1d4ed8 52%, #2563eb 100%);
+    border-radius: 16px;
+    color: #fff;
+    padding: 1.2rem 1.25rem;
+    box-shadow: 0 16px 30px rgba(22,64,163,.25);
+  }
+  .sp-card {
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(2,6,23,.08);
+  }
+  .sp-card .card-header {
+    background: #fff;
+    border-bottom: 1px solid #e9edf5;
+    font-weight: 700;
+  }
+  .sp-mini {
+    background: rgba(15,23,42,.26);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 10px;
+    padding: .6rem .75rem;
+    min-width: 110px;
+  }
+  .sp-mini-label {
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: rgba(226,232,240,.9);
+  }
+  .sp-mini-value {
+    font-weight: 800;
+  }
+  .sp-avatar-lg {
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #bfdbfe;
+  }
+  .sp-progress {
+    height: 10px;
+    border-radius: 99px;
+  }
+  .sp-pill {
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+</style>
+
+<section class="sp-hero mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+      <div class="small text-uppercase fw-semibold mb-1 text-info">Mon Espace Étudiant</div>
+      <h1 class="h4 mb-1">{{ student.prenoms }} {{ student.nom }}</h1>
+      <div class="small text-light-emphasis">Matricule: {{ student.matricule }} | Procedure suivie en temps reel</div>
+    </div>
+    <div class="text-end">
+      <div class="fw-semibold">Pret au voyage</div>
+      <div class="display-6 fw-bold">{{ readiness_score }}%</div>
+      <span class="badge rounded-pill {% if will_travel %}text-bg-success{% else %}text-bg-warning{% endif %}">
+        {% if will_travel %}Objectif proche{% else %}Encore des etapes{% endif %}
+      </span>
+    </div>
+  </div>
+  <div class="d-flex flex-wrap gap-2 mt-3">
+    <div class="sp-mini">
+      <div class="sp-mini-label">Niveau</div>
+      <div class="sp-mini-value">{{ student.niveau }}</div>
+    </div>
+    <div class="sp-mini">
+      <div class="sp-mini-label">Filiere</div>
+      <div class="sp-mini-value">{{ student.filiere }}</div>
+    </div>
+    <div class="sp-mini">
+      <div class="sp-mini-label">Etapes done</div>
+      <div class="sp-mini-value">{{ stage_done }}/{{ stage_total }}</div>
+    </div>
+    <div class="sp-mini">
+      <div class="sp-mini-label">Total paye</div>
+      <div class="sp-mini-value">{{ paid_amount }}</div>
+    </div>
+  </div>
+</section>
+
+<div class="row g-3 mb-3" id="profil">
+  <div class="col-xl-5">
+    <div class="card sp-card h-100">
+      <div class="card-header">Mon profil</div>
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          {% if student.photo_path %}
+          <img src="{{ url_for('static', filename='uploads/photos/' ~ student.photo_path) }}" class="sp-avatar-lg" alt="Photo">
+          {% else %}
+          <img src="https://ui-avatars.com/api/?name={{ (student.prenoms or '') ~ '+' ~ (student.nom or '') }}&background=eaf2ff&color=1e3a8a&size=120" class="sp-avatar-lg" alt="Photo">
+          {% endif %}
+          <div>
+            <div class="h5 mb-1">{{ student.prenoms }} {{ student.nom }}</div>
+            <div class="text-muted small">{{ student.email or "Email non renseigne" }}</div>
+            <div class="text-muted small">{{ student.telephone or "Telephone non renseigne" }}</div>
+          </div>
+        </div>
+
+        <form method="post" action="{{ url_for('student_portal.update_profile') }}" enctype="multipart/form-data">
+          {{ profile_form.hidden_tag() }}
+          <div class="row g-2">
+            <div class="col-md-6">{{ profile_form.nom.label(class_='form-label') }}{{ profile_form.nom(class_='form-control') }}</div>
+            <div class="col-md-6">{{ profile_form.prenoms.label(class_='form-label') }}{{ profile_form.prenoms(class_='form-control') }}</div>
+            <div class="col-md-6">{{ profile_form.email.label(class_='form-label') }}{{ profile_form.email(class_='form-control') }}</div>
+            <div class="col-md-6">{{ profile_form.telephone.label(class_='form-label') }}{{ profile_form.telephone(class_='form-control') }}</div>
+            <div class="col-12">{{ profile_form.adresse.label(class_='form-label') }}{{ profile_form.adresse(class_='form-control', rows=2) }}</div>
+            <div class="col-12">{{ profile_form.avatar.label(class_='form-label') }}{{ profile_form.avatar(class_='form-control') }}</div>
+            <div class="col-12 d-flex gap-2">
+              {{ profile_form.submit(class_='btn btn-primary') }}
+              <a class="btn btn-outline-secondary" href="{{ url_for('student_portal.change_password') }}">Changer mon mot de passe</a>
+            </div>
+          </div>
+        </form>
+        <div class="small text-muted mt-2">Le mot de passe est securise et n'est jamais affiche. Tu peux uniquement le modifiér.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-7">
+    <div class="card sp-card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Suivi dossier et procedure</span>
+        <span class="badge text-bg-primary">{{ progress_pct }}%</span>
+      </div>
+      <div class="card-body">
+        {% if active_case %}
+        <div class="mb-2 small text-muted">
+          Dossier: {{ active_case.status }} | Destination: {{ active_case.destination_country or "-" }} - {{ active_case.destination_city or "-" }}
+        </div>
+        {% else %}
+        <div class="mb-2 small text-muted">Aucun dossier actif pour le moment.</div>
+        {% endif %}
+        <div class="progress sp-progress mb-3">
+          <div class="progress-bar" role="progressbar" style="width: {{ progress_pct }}%;" aria-valuenow="{{ progress_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="border rounded-3 p-2">
+              <canvas id="stagesChart" height="190"></canvas>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded-3 p-2">
+              <canvas id="travelChart" height="190"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="small text-muted mt-3">
+          L'avancement est synthÃ©tisÃ© dans les graphiques ci-dessus.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3" id="rdv">
+  <div class="col-lg-6">
+    <div class="card sp-card h-100">
+      <div class="card-header">Mes RDV events</div>
+      <ul class="list-group list-group-flush">
+        {% for b in booking_upcoming %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">{{ b.event_slot.start_datetime.strftime('%Y-%m-%d %H:%M') }}</div>
+            <div class="small text-muted">Reservation événement</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill sp-pill">{{ b.status }}</span>
+            {% if b.status != 'confirmed' %}
+            <form method="post" action="{{ url_for('student_portal.confirm_booking', booking_id=b.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-success">Confirmer</button>
+            </form>
+            {% endif %}
+          </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">Aucun RDV event.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card sp-card h-100">
+      <div class="card-header">Mes RDV demandes</div>
+      <ul class="list-group list-group-flush">
+        {% for r in rdv_upcoming %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">{{ r.requested_date }} - {{ r.requested_slot }}</div>
+            <div class="small text-muted">{{ r.motif }}</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-pill sp-pill">{{ r.status }}</span>
+            {% if r.status not in ['confirmed', 'done', 'cancelled'] %}
+            <form method="post" action="{{ url_for('student_portal.confirm_appointment', appointment_id=r.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-success">Confirmer</button>
+            </form>
+            {% endif %}
+          </div>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted">Aucun RDV demande.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3" id="documents">
+  <div class="col-lg-5">
+    <div class="card sp-card h-100">
+      <div class="card-header">Uploader un document</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('student_portal.upload_document') }}" enctype="multipart/form-data">
+          {{ doc_form.hidden_tag() }}
+          <div class="mb-3">{{ doc_form.doc_type.label(class_='form-label') }}{{ doc_form.doc_type(class_='form-control') }}</div>
+          <div class="mb-3">{{ doc_form.notes.label(class_='form-label') }}{{ doc_form.notes(class_='form-control', rows=2) }}</div>
+          <div class="mb-3">{{ doc_form.file.label(class_='form-label') }}{{ doc_form.file(class_='form-control') }}</div>
+          {{ doc_form.submit(class_='btn btn-primary') }}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card sp-card h-100">
+      <div class="card-header">Mes documents</div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Type</th><th>Fichier</th><th>Statut</th><th>Date</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for d in documents %}
+            <tr>
+              <td>{{ d.doc_type }}</td>
+              <td>
+                <div>{{ d.filename }}</div>
+                {% if d.case_id %}<small class="text-muted">Lie au dossier #{{ d.case_id }}</small>{% endif %}
+              </td>
+              <td><span class="badge rounded-pill sp-pill">{{ d.review_status }}</span></td>
+              <td>{{ d.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              <td><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('student_portal.download_document', document_id=d.id) }}">Telecharger</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-muted">Aucun document.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card sp-card" id="payments">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Paiements (mis a jour par l'équipe dossier)</span>
+    <span class="small text-muted">Total: {{ total_amount }} | Paye: {{ paid_amount }} | Reste: {{ due_amount }}</span>
+  </div>
+  <div class="card-body py-2 border-bottom">
+    <div class="small text-muted">Ton agence met a jour cette section depuis ta fiche dossier. Tu peux suivre ici ce que tu dois payer et ce qui est deja valide.</div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr><th>Libelle</th><th>Montant</th><th>Devise</th><th>Paye</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.label }}</td>
+          <td>{{ '%.2f'|format(p.amount or 0) }}</td>
+          <td>{{ p.currency }}</td>
+          <td>
+            <span class="badge rounded-pill {% if p.paid %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+              {{ 'Oui' if p.paid else 'Non' }}
+            </span>
+          </td>
+          <td>{% if p.paid_at %}{{ p.paid_at.strftime('%Y-%m-%d %H:%M') }}{% else %}-{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted">Aucun paiement enregistré.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const payload = {{ chart_data|tojson }};
+    const stageCtx = document.getElementById("stagesChart");
+    if (stageCtx) {
+      new Chart(stageCtx, {
+        type: "doughnut",
+        data: {
+          labels: payload.stage_labels,
+          datasets: [{
+            data: payload.stage_values,
+            backgroundColor: ["#16a34a", "#f59e0b", "#cbd5e1"],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: "bottom" }
+          }
+        }
+      });
+    }
+
+    const travelCtx = document.getElementById("travelChart");
+    if (travelCtx) {
+      new Chart(travelCtx, {
+        type: "bar",
+        data: {
+          labels: ["Pret au voyage"],
+          datasets: [{
+            label: "Score",
+            data: [payload.readiness_score],
+            backgroundColor: payload.readiness_score >= 70 ? "#22c55e" : "#f59e0b",
+            borderRadius: 8,
+            maxBarThickness: 56
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true, max: 100 }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}
+

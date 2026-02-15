@@ -1,0 +1,18 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 239-732-536
+127.0.0.1 - - [14/Feb/2026 22:05:36] "GET /student/ HTTP/1.1" 200 -
+127.0.0.1 - - [14/Feb/2026 22:05:36] "GET /static/css/app.css HTTP/1.1" 304 -
+127.0.0.1 - - [14/Feb/2026 22:05:36] "GET /static/uploads/photos/ce99684aab0040e2bba2003a9caa7c0a.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [14/Feb/2026 22:06:22] "GET /student/change-password HTTP/1.1" 200 -
+127.0.0.1 - - [14/Feb/2026 22:06:22] "GET /static/css/app.css HTTP/1.1" 304 -
+127.0.0.1 - - [14/Feb/2026 22:06:22] "GET /static/uploads/photos/ce99684aab0040e2bba2003a9caa7c0a.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [14/Feb/2026 22:06:25] "GET /student/ HTTP/1.1" 200 -
+127.0.0.1 - - [14/Feb/2026 22:06:25] "GET /static/css/app.css HTTP/1.1" 304 -
+127.0.0.1 - - [14/Feb/2026 22:06:25] "GET /static/uploads/photos/ce99684aab0040e2bba2003a9caa7c0a.jpg HTTP/1.1" 304 -
+127.0.0.1 - - [14/Feb/2026 22:08:36] "GET /static/css/app.css HTTP/1.1" 304 -
+127.0.0.1 - - [14/Feb/2026 22:08:37] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -
+ * Detected change in 'C:\\code.py\\InnovFormation\\app\\student_portal\\routes.py', reloading

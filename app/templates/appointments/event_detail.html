@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h1 class="h4 mb-0">Événement: {{ event.title }}</h1>
+  <div class="d-flex gap-2">
+    <form method="post" action="{{ url_for('appointments.delete_event', event_id=event.id) }}" data-confirm="Supprimer cet événement et tous ses RDV ?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-danger" type="submit">Supprimer événement</button>
+    </form>
+    <a class="btn btn-outline-secondary" href="{{ public_link }}" target="_blank">Voir page publique</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('appointments.list_appointments') }}">Retour</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Paramètres événement</div>
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+          <div class="row g-2">
+            <div class="col-md-7">{{ form.title.label(class_='form-label') }}{{ form.title(class_='form-control') }}</div>
+            <div class="col-md-5">{{ form.slug.label(class_='form-label') }}{{ form.slug(class_='form-control') }}</div>
+            <div class="col-md-6">{{ form.location.label(class_='form-label') }}{{ form.location(class_='form-control') }}</div>
+            <div class="col-md-6">{{ form.timezone.label(class_='form-label') }}{{ form.timezone(class_='form-control') }}</div>
+            <div class="col-12">{{ form.description_html.label(class_='form-label') }}{{ form.description_html(class_='form-control', rows=2) }}</div>
+            <div class="col-md-3">{{ form.start_date.label(class_='form-label') }}{{ form.start_date(class_='form-control') }}</div>
+            <div class="col-md-3">{{ form.end_date.label(class_='form-label') }}{{ form.end_date(class_='form-control') }}</div>
+            <div class="col-md-2">{{ form.day_start_time.label(class_='form-label') }}{{ form.day_start_time(class_='form-control') }}</div>
+            <div class="col-md-2">{{ form.day_end_time.label(class_='form-label') }}{{ form.day_end_time(class_='form-control') }}</div>
+            <div class="col-md-2">{{ form.slot_minutes.label(class_='form-label') }}{{ form.slot_minutes(class_='form-control') }}</div>
+            <div class="col-md-3">{{ form.max_per_day.label(class_='form-label') }}{{ form.max_per_day(class_='form-control') }}</div>
+            <div class="col-md-3">{{ form.is_active.label(class_='form-label') }}{{ form.is_active(class_='form-select') }}</div>
+          </div>
+          <div class="mt-3">{{ form.submit(class_='btn btn-primary') }}</div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-header">Generation des creneaux</div>
+      <div class="card-body">
+        <p class="mb-2">Clique pour créer les slots entre {{ event.start_date }} et {{ event.end_date }}.</p>
+        <form method="post" action="{{ url_for('appointments.generate_slots', event_id=event.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary" type="submit">Generer les slots</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Lien token par destinataire</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('appointments.generate_token', event_id=event.id) }}">
+          {{ token_form.hidden_tag() }}
+          <div class="mb-2">{{ token_form.student_id.label(class_='form-label') }}{{ token_form.student_id(class_='form-select') }}</div>
+          <div class="mb-2">{{ token_form.expires_at.label(class_='form-label') }}{{ token_form.expires_at(class_='form-control') }}</div>
+          {{ token_form.submit(class_='btn btn-outline-primary') }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">Vue visuelle des creneaux</div>
+  <div class="card-body">
+    {% set ns = namespace(total_capacity=0, total_booked=0) %}
+    {% for s in slots %}
+      {% set ns.total_capacity = ns.total_capacity + s.capacity %}
+      {% set ns.total_booked = ns.total_booked + s.booked_count %}
+    {% endfor %}
+    {% set total_available = ns.total_capacity - ns.total_booked %}
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="border rounded p-3 h-100">
+          <div class="small text-muted">Total creneaux</div>
+          <div class="fs-4 fw-bold">{{ slots|length }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border rounded p-3 h-100">
+          <div class="small text-muted">Places reservees</div>
+          <div class="fs-4 fw-bold text-success">{{ ns.total_booked }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border rounded p-3 h-100">
+          <div class="small text-muted">Places disponibles</div>
+          <div class="fs-4 fw-bold text-primary">{{ total_available }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="border rounded p-3">
+          <div class="fw-semibold mb-2">Occupation globale</div>
+          <div style="height:260px;max-width:260px;margin:0 auto;">
+            <canvas id="slotsDonut"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="border rounded p-3">
+          <div class="fw-semibold mb-2">Reservations par jour</div>
+          <div style="height:280px;">
+            <canvas id="slotsByDay"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">Bookings</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>Nom</th><th>Email</th><th>Tel</th><th>Creneau</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for b in bookings %}
+      <tr>
+        <td>{{ b.name }}</td>
+        <td>{{ b.email }}</td>
+        <td>{{ b.phone or '-' }}</td>
+        <td>{{ b.event_slot.start_datetime.strftime('%Y-%m-%d %H:%M') if b.event_slot else '-' }}</td>
+        <td>{{ b.status }}</td>
+        <td>
+          <form method="post" action="{{ url_for('appointments.delete_booking', booking_id=b.id) }}" data-confirm="Supprimer ce RDV ?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted">Aucun booking.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Tokens recents</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>Token</th><th>Étudiant</th><th>Expire</th><th>Utilise</th><th>Lien</th></tr></thead>
+      <tbody>
+      {% for t in invite_tokens %}
+      <tr>
+        <td><code>{{ t.token[:16] }}...</code></td>
+        <td>{{ t.student.matricule if t.student else 'Public' }}</td>
+        <td>{{ t.expires_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ t.used_at.strftime('%Y-%m-%d %H:%M') if t.used_at else '-' }}</td>
+        <td><a class="btn btn-sm btn-outline-secondary" target="_blank" href="{{ url_for('public_rdv.book_event', slug=event.slug, t=t.token) }}">Ouvrir</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-muted">Aucun token.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const donutEl = document.getElementById("slotsDonut");
+    const byDayEl = document.getElementById("slotsByDay");
+    if (!donutEl || !byDayEl) return;
+
+    const totalBooked = {{ ns.total_booked|default(0) }};
+    const totalAvailable = {{ total_available|default(0) }};
+    const dayLabels = [{% for day_key, count in day_usage|dictsort %}"{{ day_key }}"{% if not loop.last %}, {% endif %}{% endfor %}];
+    const dayCounts = [{% for day_key, count in day_usage|dictsort %}{{ count }}{% if not loop.last %}, {% endif %}{% endfor %}];
+    const dayMax = dayLabels.map(() => {{ event.max_per_day }});
+
+    new Chart(donutEl, {
+      type: "doughnut",
+      data: {
+        labels: ["Reserve", "Disponible"],
+        datasets: [{
+          data: [totalBooked, totalAvailable],
+          backgroundColor: ["#16a34a", "#2563eb"],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1,
+        plugins: {
+          legend: { position: "bottom" }
+        }
+      }
+    });
+
+    new Chart(byDayEl, {
+      type: "bar",
+      data: {
+        labels: dayLabels,
+        datasets: [
+          {
+            label: "Reservations",
+            data: dayCounts,
+            backgroundColor: "#2563eb"
+          },
+          {
+            label: "Capacite max/jour",
+            data: dayMax,
+            backgroundColor: "#e5e7eb"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+  })();
+</script>
+{% endblock %}
+

@@ -1,0 +1,15 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">{{ 'Modifier' if mode == 'edit' else 'Nouvelle' }} entite</h1>
+<div class="card"><div class="card-body">
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">{{ form.name.label(class_='form-label') }}{{ form.name(class_='form-control') }}</div>
+    <div class="form-check mb-3">{{ form.is_partner(class_='form-check-input') }} {{ form.is_partner.label(class_='form-check-label') }}</div>
+    <div class="mb-3">{{ form.notes.label(class_='form-label') }}{{ form.notes(class_='form-control', rows=4) }}</div>
+    {{ form.submit(class_='btn btn-primary') }}
+    <a class="btn btn-outline-secondary" href="{{ url_for('procedures.list_entities') }}">Retour</a>
+  </form>
+</div></div>
+{% endblock %}
+

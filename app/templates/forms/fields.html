@@ -1,0 +1,16 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Champs: {{ current_form.title }}</h1>
+<form method="post" class="row g-3">{{ field_form.hidden_tag() }}
+<div class="col-md-2">{{ field_form.field_key.label(class_='form-label') }}{{ field_form.field_key(class_='form-control') }}</div>
+<div class="col-md-3">{{ field_form.label.label(class_='form-label') }}{{ field_form.label(class_='form-control') }}</div>
+<div class="col-md-2">{{ field_form.field_type.label(class_='form-label') }}{{ field_form.field_type(class_='form-select') }}</div>
+<div class="col-md-2">{{ field_form.is_required.label(class_='form-label') }}{{ field_form.is_required(class_='form-select') }}</div>
+<div class="col-md-3">{{ field_form.sort_order.label(class_='form-label') }}{{ field_form.sort_order(class_='form-control') }}</div>
+<div class="col-12">{{ field_form.options_json.label(class_='form-label') }}{{ field_form.options_json(class_='form-control', rows=2) }}</div>
+<div class="col-12">{{ field_form.submit(class_='btn btn-primary') }}</div>
+</form>
+<hr>
+<table class="table"><thead><tr><th>Ordre</th><th>Cle</th><th>Label</th><th>Type</th><th>Obligatoire</th></tr></thead><tbody>{% for f in fields %}<tr><td>{{ f.sort_order }}</td><td>{{ f.field_key }}</td><td>{{ f.label }}</td><td>{{ f.field_type }}</td><td>{{ 'Oui' if f.is_required else 'Non' }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
+

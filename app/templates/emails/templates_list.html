@@ -1,0 +1,12 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h1 class="h4">Templates Email</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('emails.send_direct') }}">Email direct</a>
+    <a class="btn btn-primary" href="{{ url_for('emails.template_new') }}">Nouveau</a>
+  </div>
+</div>
+<table class="table"><thead><tr><th>ID</th><th>Nom</th><th>Sujet</th></tr></thead><tbody>{% for t in templates %}<tr><td>{{ t.id }}</td><td>{{ t.name }}</td><td>{{ t.subject }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
+

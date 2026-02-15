@@ -1,0 +1,3 @@
+﻿"""
+Student portal package.
+"""

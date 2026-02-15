@@ -1,0 +1,21 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">{{ 'Modifier' if mode == 'edit' else 'Nouvelle' }} ecole</h1>
+<div class="card"><div class="card-body">
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">{{ form.entity_id.label(class_='form-label') }}{{ form.entity_id(class_='form-select') }}</div>
+    <div class="mb-3">{{ form.name.label(class_='form-label') }}{{ form.name(class_='form-control') }}</div>
+    <div class="row g-3">
+      <div class="col-md-4">{{ form.country.label(class_='form-label') }}{{ form.country(class_='form-control') }}</div>
+      <div class="col-md-4">{{ form.city.label(class_='form-label') }}{{ form.city(class_='form-control') }}</div>
+      <div class="col-md-4">{{ form.website.label(class_='form-label') }}{{ form.website(class_='form-control') }}</div>
+    </div>
+    <div class="mt-3">
+      {{ form.submit(class_='btn btn-primary') }}
+      <a class="btn btn-outline-secondary" href="{{ url_for('procedures.list_schools') }}">Retour</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}
+

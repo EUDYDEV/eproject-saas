@@ -1,0 +1,443 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<style>
+  .svc-wrap {
+    font-family: "Poppins", "Segoe UI", Tahoma, sans-serif;
+    max-width: none;
+    width: 100%;
+  }
+  .svc-hero {
+    border-radius: 18px;
+    padding: 20px;
+    color: #f8fafc;
+    background:
+      radial-gradient(820px 280px at -10% -20%, rgba(56, 189, 248, 0.40), transparent 60%),
+      radial-gradient(900px 300px at 110% -30%, rgba(37, 99, 235, 0.42), transparent 62%),
+      linear-gradient(135deg, #0b1224 0%, #16213d 48%, #1d4ed8 100%);
+    box-shadow: 0 20px 42px rgba(15, 23, 42, 0.28);
+    border: 1px solid rgba(191, 219, 254, 0.30);
+  }
+  .svc-title {
+    font-size: clamp(1.2rem, 2vw, 1.8rem);
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: .2px;
+  }
+  .svc-subtitle {
+    margin-top: 6px;
+    opacity: .9;
+    font-size: .95rem;
+  }
+  .svc-pill {
+    border-radius: 999px;
+    border: 1px solid rgba(191, 219, 254, 0.45);
+    padding: 6px 12px;
+    background: rgba(15, 23, 42, .28);
+    color: #e2e8f0;
+    font-size: .78rem;
+    font-weight: 600;
+  }
+
+  .svc-card {
+    margin-top: 14px;
+    border-radius: 18px;
+    border: 1px solid #dbeafe;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.10);
+    overflow: hidden;
+  }
+  .svc-topbar {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fbff;
+  }
+  .svc-agency {
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .svc-note {
+    color: #64748b;
+    font-size: .84rem;
+  }
+
+  .svc-filter {
+    padding: 14px 16px 0 16px;
+  }
+  .svc-filter .form-select,
+  .svc-filter .btn {
+    border-radius: 10px;
+  }
+
+  .chat-list {
+    margin: 12px 16px;
+    min-height: 430px;
+    max-height: 62vh;
+    overflow-y: auto;
+    border-radius: 14px;
+    border: 1px solid #dbeafe;
+    background:
+      radial-gradient(360px 120px at 100% 0%, rgba(191, 219, 254, .45), transparent 70%),
+      #f8fbff;
+    padding: 12px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .chat-list::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  .chat-row {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  .chat-row.mine {
+    justify-content: flex-end;
+  }
+  .chat-bubble {
+    max-width: 82%;
+    border-radius: 14px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    padding: 10px 12px;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  }
+  .chat-row.mine .chat-bubble {
+    background: linear-gradient(180deg, #dbeafe 0%, #c7ddff 100%);
+    border-color: #93c5fd;
+  }
+  .chat-meta {
+    margin-top: 6px;
+    font-size: .72rem;
+    color: #64748b;
+  }
+  .chat-empty,
+  .chat-warning {
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #64748b;
+    padding: 12px;
+    font-size: .9rem;
+  }
+  .chat-warning {
+    color: #991b1b;
+    border-color: #fecaca;
+    background: #fff1f2;
+  }
+
+  .svc-compose {
+    border-top: 1px solid #dbeafe;
+    background: #fff;
+    padding: 14px 16px 16px 16px;
+  }
+  .svc-compose .input-group {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #bfdbfe;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.10);
+  }
+  .svc-compose .form-control {
+    border: 0;
+    min-height: 48px;
+    font-size: .95rem;
+  }
+  .svc-compose .form-control:focus {
+    box-shadow: none;
+  }
+  .svc-compose .btn {
+    border: 0;
+    min-width: 120px;
+    font-weight: 600;
+    background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  }
+
+  .chat-typing {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #334155;
+    font-size: .85rem;
+  }
+  .chat-typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #64748b;
+    display: inline-block;
+    animation: chatTypingPulse 1.2s infinite ease-in-out;
+  }
+  .chat-typing-dot:nth-child(2) { animation-delay: .15s; }
+  .chat-typing-dot:nth-child(3) { animation-delay: .3s; }
+  @keyframes chatTypingPulse {
+    0%, 80%, 100% { opacity: .35; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-2px); }
+  }
+
+  @media (max-width: 768px) {
+    .svc-hero { padding: 16px; border-radius: 14px; }
+    .svc-card { border-radius: 14px; }
+    .chat-list { margin: 10px 10px; min-height: 54vh; max-height: 60vh; }
+    .svc-topbar, .svc-filter, .svc-compose { padding-left: 10px; padding-right: 10px; }
+    .svc-compose .btn { min-width: 96px; }
+    .chat-bubble { max-width: 92%; }
+  }
+</style>
+
+<div class="svc-wrap">
+  <section class="svc-hero">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+      <div>
+        <h1 class="svc-title">Service clients</h1>
+        <div class="svc-subtitle">Dialogue en temps reel avec les agences, suivi des demandes et assistance continue.</div>
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        {% if is_platform_super_admin and is_it_saas_mode %}
+        <span class="svc-pill">Mode IT global</span>
+        {% endif %}
+        <span class="svc-pill">E-PROJECT</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="svc-card">
+    {% if is_platform_super_admin %}
+    <div class="svc-filter">
+      <form method="get" class="row g-2">
+        <div class="col-md-8">
+          <label class="form-label mb-1">Choisir une agence a assister</label>
+          <select class="form-select" name="branch_id" id="chatBranchSelect">
+            <option value="0">Selectionner une agence</option>
+            {% for b in branches %}
+            <option value="{{ b.id }}" {% if selected_branch_id == b.id %}selected{% endif %}>{{ b.name }} ({{ b.country_code }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-outline-primary">Ouvrir</button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="svc-topbar">
+      <div>
+        <div class="svc-note">Conversation active</div>
+        <div class="svc-agency">{{ selected_branch.name if selected_branch else "Aucune agence selectionnee" }}</div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="svc-note">Support et moderation E-PROJECT</div>
+        {% if can_close_chat %}
+        <button id="chatCloseBtn" type="button" class="btn btn-sm btn-outline-danger" {% if not selected_branch %}disabled{% endif %}>Mettre fin</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <div id="chatList" class="chat-list">
+      {% if not selected_branch %}
+      <div class="chat-warning">Selectionne une agence pour demarrer la discussion.</div>
+      {% else %}
+      <div class="chat-empty">Aucun message pour le moment.</div>
+      {% endif %}
+    </div>
+
+    <div class="svc-compose">
+      <form id="chatForm">
+        <input type="hidden" id="chatBranchId" value="{{ selected_branch_id }}">
+        <div class="input-group">
+          <input id="chatInput" type="text" class="form-control" maxlength="1500" placeholder="Ecris ton message au service clients..." {% if not selected_branch %}disabled{% endif %}>
+          <button id="chatSend" class="btn btn-primary" type="submit" {% if not selected_branch %}disabled{% endif %}>Envoyer</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  (function () {
+    const chatList = document.getElementById("chatList");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatSend = document.getElementById("chatSend");
+    const chatCloseBtn = document.getElementById("chatCloseBtn");
+    const branchInput = document.getElementById("chatBranchId");
+    if (!chatList || !chatForm || !chatInput || !chatSend || !branchInput) return;
+
+    const branchId = Number(branchInput.value || 0);
+    if (!branchId) return;
+
+    const messagesUrl = "{{ url_for('dashboard.chat_messages') }}";
+    const sendUrl = "{{ url_for('dashboard.chat_send') }}";
+    const closeUrl = "{{ url_for('dashboard.chat_close') }}";
+    const csrf = "{{ csrf_token() }}";
+    let lastId = 0;
+    let loaded = false;
+    let pendingAutoReplyId = null;
+    let typingRowEl = null;
+
+    const escapeHtml = function (s) {
+      return String(s || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    };
+
+    const appendItem = function (item) {
+      const empty = chatList.querySelector(".chat-empty");
+      if (empty) empty.remove();
+      const row = document.createElement("div");
+      row.className = "chat-row" + (item.mine ? " mine" : "");
+      row.innerHTML =
+        '<div class="chat-bubble">' +
+          '<div>' + escapeHtml(item.message || "") + '</div>' +
+          '<div class="chat-meta">' + escapeHtml(item.sender || "") + ' (' + escapeHtml(item.sender_role || "") + ') - ' + escapeHtml(item.created_at_label || "") + '</div>' +
+        '</div>';
+      chatList.appendChild(row);
+      chatList.scrollTop = chatList.scrollHeight;
+      if (item.id && item.id > lastId) lastId = item.id;
+    };
+
+    const showTyping = function () {
+      if (typingRowEl) return;
+      typingRowEl = document.createElement("div");
+      typingRowEl.className = "chat-row";
+      typingRowEl.innerHTML =
+        '<div class="chat-bubble">' +
+          '<div class="chat-typing">Service clients ecrit' +
+            '<span class="chat-typing-dot"></span>' +
+            '<span class="chat-typing-dot"></span>' +
+            '<span class="chat-typing-dot"></span>' +
+          '</div>' +
+        '</div>';
+      chatList.appendChild(typingRowEl);
+      chatList.scrollTop = chatList.scrollHeight;
+    };
+
+    const hideTyping = function () {
+      if (!typingRowEl) return;
+      typingRowEl.remove();
+      typingRowEl = null;
+    };
+
+    const loadMessages = async function () {
+      const url = new URL(messagesUrl, window.location.origin);
+      url.searchParams.set("branch_id", String(branchId));
+      if (lastId > 0) url.searchParams.set("after_id", String(lastId));
+      try {
+        const res = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
+        if (!res.ok) return;
+        const data = await res.json();
+        let items = Array.isArray(data.items) ? data.items : [];
+        if (pendingAutoReplyId) {
+          items = items.filter(function (it) { return it.id !== pendingAutoReplyId; });
+        }
+        if (!loaded && items.length === 0) {
+          chatList.innerHTML = '<div class="chat-empty">Aucun message pour le moment.</div>';
+        }
+        items.forEach(appendItem);
+        loaded = true;
+      } catch (_) {
+      }
+    };
+
+    if (chatCloseBtn) {
+      chatCloseBtn.addEventListener("click", async function () {
+        if (!window.confirm("Mettre fin a cette conversation ?")) return;
+        chatCloseBtn.disabled = true;
+        try {
+          const body = new URLSearchParams();
+          body.set("branch_id", String(branchId));
+          body.set("csrf_token", csrf);
+          const res = await fetch(closeUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+              "X-CSRFToken": csrf,
+              "X-CSRF-Token": csrf,
+              "Accept": "application/json"
+            },
+            body: body.toString()
+          });
+          if (!res.ok) {
+            const errText = await res.text();
+            alert("Cloture impossible. " + (errText || "Reessaye."));
+            return;
+          }
+          const data = await res.json();
+          lastId = data && data.closed_id ? Number(data.closed_id) : 0;
+          loaded = true;
+          hideTyping();
+          chatList.innerHTML = '<div class="chat-empty">Conversation terminee. Les anciens messages sont masques. Une nouvelle discussion apparaitra au prochain message.</div>';
+        } catch (_) {
+          alert("Erreur reseau pendant la cloture.");
+        } finally {
+          chatCloseBtn.disabled = false;
+        }
+      });
+    }
+
+    chatForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const msg = (chatInput.value || "").trim();
+      if (!msg) return;
+      chatSend.disabled = true;
+      try {
+        const body = new URLSearchParams();
+        body.set("message", msg);
+        body.set("branch_id", String(branchId));
+        body.set("csrf_token", csrf);
+        const res = await fetch(sendUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-CSRFToken": csrf,
+            "X-CSRF-Token": csrf,
+            "Accept": "application/json"
+          },
+          body: body.toString()
+        });
+        if (!res.ok) {
+          const errText = await res.text();
+          alert("Envoi impossible. " + (errText || "Verifie la session et recharge la page."));
+          return;
+        }
+        const data = await res.json();
+        if (data && data.item) {
+          appendItem(data.item);
+          chatInput.value = "";
+          if (data.auto_reply) {
+            pendingAutoReplyId = data.auto_reply.id || null;
+            showTyping();
+            const delayMs = 1200 + Math.floor(Math.random() * 2200);
+            window.setTimeout(function () {
+              hideTyping();
+              appendItem(data.auto_reply);
+              pendingAutoReplyId = null;
+            }, delayMs);
+          }
+        } else if (data && data.error) {
+          alert("Envoi impossible: " + data.error);
+        }
+      } catch (_) {
+        alert("Erreur reseau. Recharge la page et reessaie.");
+      } finally {
+        chatSend.disabled = false;
+        chatInput.focus();
+      }
+    });
+
+    loadMessages();
+    window.setInterval(loadMessages, 3000);
+  })();
+</script>
+{% endblock %}
+

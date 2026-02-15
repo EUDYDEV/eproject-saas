@@ -1,0 +1,16 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Ajouter responsable ({{ student.matricule }})</h1>
+<form method="post" class="row g-3">
+{{ form.hidden_tag() }}
+<div class="col-md-4">{{ form.nom.label(class_='form-label') }}{{ form.nom(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.prenoms.label(class_='form-label') }}{{ form.prenoms(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.lien_parente.label(class_='form-label') }}{{ form.lien_parente(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.telephone.label(class_='form-label') }}{{ form.telephone(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.email.label(class_='form-label') }}{{ form.email(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.contact_urgence.label(class_='form-label') }}{{ form.contact_urgence(class_='form-select') }}</div>
+<div class="col-12">{{ form.adresse.label(class_='form-label') }}{{ form.adresse(class_='form-control') }}</div>
+<div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+</form>
+{% endblock %}
+

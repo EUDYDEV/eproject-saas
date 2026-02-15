@@ -1,0 +1,91 @@
+﻿{% extends "base.html" %}
+{% block auth_content %}
+<style>
+  .login-wrap {
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 520px at 85% -10%, rgba(37,99,235,.30), transparent 60%),
+      radial-gradient(1100px 500px at -15% 10%, rgba(14,165,233,.22), transparent 55%),
+      linear-gradient(180deg, #0f172a 0%, #0b1224 45%, #111827 100%);
+    margin: -1rem -0.75rem 0;
+    padding: 1rem 0.75rem 2rem;
+    color: #f8fafc;
+  }
+  .login-brand {
+    letter-spacing: .02em;
+    font-weight: 800;
+  }
+  .login-panel {
+    background: rgba(15,23,42,.76);
+    border: 1px solid rgba(148,163,184,.24);
+    border-radius: 18px;
+    box-shadow: 0 20px 40px rgba(2,6,23,.40);
+    backdrop-filter: blur(6px);
+  }
+  .login-title {
+    font-size: clamp(1.6rem, 2.7vw, 2.5rem);
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -.02em;
+  }
+  .login-gradient {
+    background: linear-gradient(90deg, #38bdf8 0%, #3b82f6 60%, #2563eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .login-form .form-label {
+    font-size: .9rem;
+    color: #cbd5e1;
+  }
+  .login-form .form-control {
+    background: rgba(15,23,42,.5);
+    border: 1px solid rgba(148,163,184,.35);
+    color: #f8fafc;
+  }
+  .login-form .form-control:focus {
+    background: rgba(15,23,42,.7);
+    color: #fff;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 .2rem rgba(59,130,246,.22);
+  }
+  .login-form .btn-login {
+    font-weight: 700;
+    letter-spacing: .01em;
+  }
+</style>
+
+<div class="login-wrap">
+  <div class="container-xl">
+    <div class="d-flex justify-content-between align-items-center py-3">
+      <div class="h4 mb-0 login-brand">{{ site_name }}</div>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('dashboard.index') }}">Accueil</a>
+    </div>
+
+    <div class="row align-items-center g-4 g-lg-5 py-2 py-lg-4">
+      <div class="col-lg-6">
+        <div class="text-uppercase small text-info fw-semibold mb-2">Espace Administration</div>
+        <h1 class="login-title mb-3">Bienvenue sur <span class="login-gradient">{{ site_name }}</span></h1>
+        <p class="text-light-emphasis mb-0">
+          Connecte-toi pour gerer tes étudiants, procedures, rendez-vous, emails et abonnements agences.
+        </p>
+      </div>
+
+      <div class="col-lg-6 col-xl-5">
+        <div class="login-panel p-4 p-lg-5">
+          <h2 class="h4 mb-3">Connexion</h2>
+          <form method="post" class="login-form">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">{{ form.username.label(class_='form-label') }}{{ form.username(class_='form-control', autocomplete='username', placeholder='Nom utilisateur') }}</div>
+            <div class="mb-3">{{ form.password.label(class_='form-label') }}{{ form.password(class_='form-control', autocomplete='current-password', placeholder='Mot de passe') }}</div>
+            {{ form.submit(class_='btn btn-primary w-100 btn-login') }}
+            <a class="btn btn-link w-100 mt-1 text-decoration-none text-info" href="{{ url_for('auth.forgot_password') }}">Mot de passe oublie ?</a>
+            <a class="btn btn-outline-light w-100 mt-2" href="{{ url_for('student_portal.login') }}">Se connecter avec matricule</a>
+            <a class="btn btn-outline-info w-100 mt-2" href="{{ url_for('dashboard.index') }}">Créer une agence</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

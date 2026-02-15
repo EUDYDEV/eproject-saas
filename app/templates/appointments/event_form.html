@@ -1,0 +1,25 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Nouvel événement RDV</h1>
+<div class="card"><div class="card-body">
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <div class="row g-3">
+      <div class="col-lg-6">{{ form.title.label(class_='form-label') }}{{ form.title(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.slug.label(class_='form-label') }}{{ form.slug(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.timezone.label(class_='form-label') }}{{ form.timezone(class_='form-control') }}</div>
+      <div class="col-lg-6">{{ form.location.label(class_='form-label') }}{{ form.location(class_='form-control') }}</div>
+      <div class="col-lg-6">{{ form.description_html.label(class_='form-label') }}{{ form.description_html(class_='form-control', rows=3) }}</div>
+      <div class="col-lg-3">{{ form.start_date.label(class_='form-label') }}{{ form.start_date(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.end_date.label(class_='form-label') }}{{ form.end_date(class_='form-control') }}</div>
+      <div class="col-lg-2">{{ form.day_start_time.label(class_='form-label') }}{{ form.day_start_time(class_='form-control') }}</div>
+      <div class="col-lg-2">{{ form.day_end_time.label(class_='form-label') }}{{ form.day_end_time(class_='form-control') }}</div>
+      <div class="col-lg-2">{{ form.slot_minutes.label(class_='form-label') }}{{ form.slot_minutes(class_='form-control') }}</div>
+      <div class="col-lg-2">{{ form.max_per_day.label(class_='form-label') }}{{ form.max_per_day(class_='form-control') }}</div>
+      <div class="col-lg-3">{{ form.is_active.label(class_='form-label') }}{{ form.is_active(class_='form-select') }}</div>
+    </div>
+    <div class="mt-3">{{ form.submit(class_='btn btn-primary') }} <a class="btn btn-outline-secondary" href="{{ url_for('appointments.list_appointments') }}">Retour</a></div>
+  </form>
+</div></div>
+{% endblock %}
+

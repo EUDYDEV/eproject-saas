@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h1 class="h4 mb-0">CV Builder - {{ student.nom }} {{ student.prenoms }}</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('students.view_student', student_id=student.id) }}">Retour fiche</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('students.preview_student_cv', student_id=student.id) }}">Apercu HTML</a>
+    <a class="btn btn-primary" href="{{ url_for('students.download_student_cv_pdf', student_id=student.id) }}">Telecharger PDF</a>
+  </div>
+</div>
+
+<form method="post" class="card">
+  <div class="card-body">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.profile_text.label(class_='form-label') }}
+      {{ form.profile_text(class_='form-control', rows='4', placeholder='Resume court: projet, motivation, objectif...') }}
+    </div>
+
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="border rounded p-3">
+          {{ form.contact_details.label(class_='form-label') }}
+          {{ form.contact_details(class_='form-control', rows='3', placeholder='Ex: Tel, email secondaire, adresse courte...') }}
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="border rounded p-3 h-100">
+          <div class="form-check mb-2">{{ form.show_education(class_='form-check-input') }} {{ form.show_education.label(class_='form-check-label') }}</div>
+          {{ form.education(class_='form-control', rows='4', placeholder='Ex: BTS 2024 - Lycee ...') }}
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="border rounded p-3 h-100">
+          <div class="form-check mb-2">{{ form.show_languages(class_='form-check-input') }} {{ form.show_languages.label(class_='form-check-label') }}</div>
+          {{ form.languages(class_='form-control', rows='4', placeholder='Ex: Francais - courant') }}
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="border rounded p-3 h-100">
+          <div class="form-check mb-2">{{ form.show_software(class_='form-check-input') }} {{ form.show_software.label(class_='form-check-label') }}</div>
+          {{ form.software(class_='form-control', rows='4', placeholder='Ex: Word, Excel, Canva') }}
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="border rounded p-3 h-100">
+          <div class="form-check mb-2">{{ form.show_hobbies(class_='form-check-input') }} {{ form.show_hobbies.label(class_='form-check-label') }}</div>
+          {{ form.hobbies(class_='form-control', rows='4', placeholder='Ex: Football') }}
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="border rounded p-3">
+          <div class="form-check mb-2">{{ form.show_professional_experience(class_='form-check-input') }} {{ form.show_professional_experience.label(class_='form-check-label') }}</div>
+          {{ form.professional_experience(class_='form-control', rows='4', placeholder='Ex: Stage commercial 2025 - Entreprise ...') }}
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="border rounded p-3">
+          <div class="form-check mb-2">{{ form.show_extra_experience(class_='form-check-input') }} {{ form.show_extra_experience.label(class_='form-check-label') }}</div>
+          {{ form.extra_experience(class_='form-control', rows='4', placeholder='Ex: Benevolat, association, projet perso...') }}
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="border rounded p-3">
+          <div class="form-check mb-2">{{ form.show_skills(class_='form-check-input') }} {{ form.show_skills.label(class_='form-check-label') }}</div>
+          {{ form.skills(class_='form-control', rows='4', placeholder='Ex: Communication, Rigueur') }}
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="border rounded p-3">
+          <div class="form-check mb-2">{{ form.show_social_links(class_='form-check-input') }} {{ form.show_social_links.label(class_='form-check-label') }}</div>
+          {{ form.social_links.label(class_='form-label') }}
+          {{ form.social_links(class_='form-control', rows='4', placeholder='Ex: LinkedIn, Facebook, Instagram...') }}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-footer d-flex justify-content-end">
+    {{ form.submit(class_='btn btn-success') }}
+  </div>
+</form>
+{% endblock %}
+

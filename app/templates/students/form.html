@@ -1,0 +1,29 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">{% if mode == 'create' %}Nouvel étudiant{% else %}Modifier étudiant{% endif %}</h1>
+<form method="post" enctype="multipart/form-data" class="row g-3">
+  {{ form.hidden_tag() }}
+  <div class="col-md-4">
+    {{ form.branch_id.label(class_='form-label') }}
+    {{ form.branch_id(class_='form-select', disabled=True) }}
+    <div class="form-text">Affectation automatique selon le compte/pays connecte.</div>
+  </div>
+  <div class="col-md-4">{{ form.matricule.label(class_='form-label') }}{{ form.matricule(class_='form-control', readonly=True) }}</div>
+  <div class="col-md-4">{{ form.nom.label(class_='form-label') }}{{ form.nom(class_='form-control') }}</div>
+  <div class="col-md-4">{{ form.prenoms.label(class_='form-label') }}{{ form.prenoms(class_='form-control') }}</div>
+  <div class="col-md-3">{{ form.sexe.label(class_='form-label') }}{{ form.sexe(class_='form-select') }}</div>
+  <div class="col-md-3">{{ form.date_naissance.label(class_='form-label') }}{{ form.date_naissance(class_='form-control') }}</div>
+  <div class="col-md-3">{{ form.email.label(class_='form-label') }}{{ form.email(class_='form-control') }}</div>
+  <div class="col-md-3">{{ form.telephone.label(class_='form-label') }}{{ form.telephone(class_='form-control') }}</div>
+  <div class="col-md-6">{{ form.procedure_email.label(class_='form-label') }}{{ form.procedure_email(class_='form-control', placeholder='ex: étudiant123@gmail.com') }}</div>
+  <div class="col-md-6">{{ form.procedure_email_password.label(class_='form-label') }}{{ form.procedure_email_password(class_='form-control', placeholder='Mot de passe du mail procedure') }}</div>
+  <div class="col-md-4">{{ form.filiere.label(class_='form-label') }}{{ form.filiere(class_='form-control') }}</div>
+  <div class="col-md-4">{{ form.niveau.label(class_='form-label') }}{{ form.niveau(class_='form-control') }}</div>
+  <div class="col-md-4">{{ form.promotion.label(class_='form-label') }}{{ form.promotion(class_='form-control') }}</div>
+  <div class="col-md-8">{{ form.adresse.label(class_='form-label') }}{{ form.adresse(class_='form-control', rows=2) }}</div>
+  <div class="col-md-2">{{ form.statut.label(class_='form-label') }}{{ form.statut(class_='form-select') }}</div>
+  <div class="col-md-2">{{ form.photo.label(class_='form-label') }}{{ form.photo(class_='form-control') }}</div>
+  <div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+</form>
+{% endblock %}
+

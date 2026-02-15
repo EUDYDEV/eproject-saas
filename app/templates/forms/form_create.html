@@ -1,0 +1,10 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Créer formulaire</h1>
+<form method="post">{{ form.hidden_tag() }}
+<div class="mb-3">{{ form.title.label(class_='form-label') }}{{ form.title(class_='form-control') }}</div>
+<div class="mb-3">{{ form.description.label(class_='form-label') }}{{ form.description(class_='form-control', rows=4) }}</div>
+{{ form.submit(class_='btn btn-primary') }}
+</form>
+{% endblock %}
+

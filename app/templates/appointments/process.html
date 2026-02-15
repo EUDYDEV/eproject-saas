@@ -1,0 +1,10 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Traiter RDV #{{ row.id }}</h1>
+<form method="post">{{ form.hidden_tag() }}
+<div class="mb-3">{{ form.status.label(class_='form-label') }}{{ form.status(class_='form-select') }}</div>
+<div class="mb-3">{{ form.admin_comment.label(class_='form-label') }}{{ form.admin_comment(class_='form-control', rows=3) }}</div>
+{{ form.submit(class_='btn btn-primary') }}
+</form>
+{% endblock %}
+

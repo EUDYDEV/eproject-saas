@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .dash-chart-wrap { height: 190px; }
+  .dash-chart-wrap-wide { height: 150px; }
+  .dash-chart-wrap canvas, .dash-chart-wrap-wide canvas { width: 100% !important; height: 100% !important; }
+  .it-themed-hero {
+    background:
+      radial-gradient(1200px 520px at 85% -10%, rgba(37,99,235,.30), transparent 60%),
+      radial-gradient(1100px 500px at -15% 10%, rgba(14,165,233,.22), transparent 55%),
+      linear-gradient(180deg, #0f172a 0%, #0b1224 45%, #111827 100%);
+    color: #f8fafc;
+    box-shadow: 0 20px 36px rgba(2, 6, 23, .34);
+  }
+  .it-card {
+    border: 1px solid rgba(148,163,184,.24);
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(2,6,23,.08);
+  }
+  .it-badge {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+  @media (max-width: 576px) {
+    .dash-chart-wrap { height: 165px; }
+    .dash-chart-wrap-wide { height: 130px; }
+  }
+  @media (min-width: 1400px) {
+    .dash-chart-wrap { height: 180px; }
+    .dash-chart-wrap-wide { height: 140px; }
+  }
+</style>
+<div class="dashboard-hero mb-4 {% if current_user.role in ['IT', 'INFORMATICIEN'] %}it-themed-hero{% endif %}">
+  <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+    <div>
+      <div class="small text-uppercase fw-semibold opacity-75">Administration</div>
+      <h1 class="h3 mb-2">Tableau de bord {{ workspace_name }}</h1>
+      <p class="mb-0">Suivi des étudiants, documents, campagnes emails et rendez-vous.</p>
+    </div>
+    <div class="d-flex gap-2 align-items-start">
+      <a class="btn btn-light btn-sm" href="{{ url_for('students.create_student') }}">Ajouter étudiant</a>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('emails.send_direct') }}">Envoyer email</a>
+    </div>
+  </div>
+</div>
+
+{% if it_agency_mode %}
+<div class="alert alert-info mb-3 d-flex justify-content-between align-items-center">
+  <div>Mode IT agence actif: tu travailles dans la vue agence selectionnee.</div>
+  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('dashboard.it_saas_dashboard') }}">Retour vue SaaS</a>
+</div>
+{% endif %}
+
+{% if it_subscription_alerts %}
+<div class="alert alert-warning mb-3">
+  <div class="fw-semibold">Surveillance abonnements (IT)</div>
+  <div class="small">
+    Total: {{ it_subscription_alerts.total }} |
+    ExpirÃ©s: {{ it_subscription_alerts.expired }} |
+    En attente validation paiement: {{ it_subscription_alerts.pending_review }} |
+    En attente paiement: {{ it_subscription_alerts.pending }}
+  </div>
+</div>
+{% endif %}
+
+{% if current_user.role in ['IT', 'INFORMATICIEN'] and it_billing_filters and it_billing_summary %}
+<div class="card it-card mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <h2 class="h6 mb-0">Controle IT des réabonnéments</h2>
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.it_subscriptions') }}">Voir tous les abonnements</a>
+    </div>
+
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <input type="hidden" name="branch_id" value="{{ selected_branch_id }}">
+      <input type="hidden" name="q" value="{{ q }}">
+      <div class="col-md-3">
+        <label class="form-label mb-1">Annee</label>
+        <select class="form-select" name="sub_year">
+          {% for y in it_billing_filters.year_options %}
+          <option value="{{ y }}" {% if it_billing_filters.selected_year == y %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1">Mois</label>
+        <select class="form-select" name="sub_month">
+          <option value="0" {% if not it_billing_filters.selected_month %}selected{% endif %}>Toute l'annee</option>
+          {% for m in range(1,13) %}
+          <option value="{{ m }}" {% if it_billing_filters.selected_month == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-primary" type="submit">Filtrer</button>
+      </div>
+    </form>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">Encaisse (filtre)</div><div class="fs-5 fw-bold text-success">{{ '%.2f'|format(it_billing_summary.collected_amount or 0) }}</div></div></div>
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">En validation IT</div><div class="fs-5 fw-bold text-warning">{{ '%.2f'|format(it_billing_summary.pending_review_amount or 0) }}</div></div></div>
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">En attente paiement</div><div class="fs-5 fw-bold">{{ '%.2f'|format(it_billing_summary.pending_amount or 0) }}</div></div></div>
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">Dossiers a valider</div><div class="fs-5 fw-bold">{{ it_billing_summary.pending_review_count }}</div></div></div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-xl-6">
+        <div class="border rounded p-2 h-100">
+          <div class="small text-muted mb-2">Solde IT (filtre selectionne)</div>
+          <div class="dash-chart-wrap"><canvas id="itBillingSplitChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-6">
+        <div class="border rounded p-2 h-100">
+          <div class="small text-muted mb-2">Encaisse par mois (annee selectionnee)</div>
+          <div class="dash-chart-wrap"><canvas id="itBillingMonthlyChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive mt-3">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Agence</th>
+            <th>Plan</th>
+            <th>Montant</th>
+            <th>Reference de depot</th>
+            <th>Date demande</th>
+            <th>Action IT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub in it_pending_review_rows %}
+          <tr>
+            <td>{{ sub.branch.name if sub.branch else ('Branche #' ~ sub.branch_id) }}</td>
+            <td>{{ (sub.plan_code or 'starter')|upper }}</td>
+            <td>{{ '%.0f'|format(sub.amount or 0) }} {{ sub.currency or 'XOF' }}</td>
+            <td><span class="badge rounded-pill it-badge">{{ sub.payment_reference or 'Aucune reference' }}</span></td>
+            <td>{{ sub.updated_at.strftime('%Y-%m-%d %H:%M') if sub.updated_at else '-' }}</td>
+            <td class="d-flex gap-1">
+              <form method="post" action="{{ url_for('admin.activate_subscription', subscription_id=sub.id) }}" data-confirm="Valider ce paiement et activer l'abonnement pour 30 jours ?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-success" type="submit">Valider</button>
+              </form>
+              <form method="post" action="{{ url_for('admin.expire_subscription', subscription_id=sub.id) }}" data-confirm="Rejeter ce paiement et expirer l'abonnement ?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Rejeter</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-muted">Aucune demande en attente de validation.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card dashboard-card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-6 col-lg-4">
+        <label class="form-label mb-1">Filtrer par branche</label>
+        {% if it_agency_mode %}
+        <input class="form-control" type="text" value="{{ branch_filter_options[0].name if branch_filter_options else 'Agence non definie' }}" readonly>
+        <input type="hidden" name="branch_id" value="{{ selected_branch_id }}">
+        {% else %}
+        <select class="form-select" name="branch_id">
+          <option value="0">Toutes (scope autorise)</option>
+          {% for b in branch_filter_options %}
+          <option value="{{ b.id }}" {% if selected_branch_id == b.id %}selected{% endif %}>{{ b.name }} ({{ b.country_code }})</option>
+          {% endfor %}
+        </select>
+        {% endif %}
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <label class="form-label mb-1">Recherche</label>
+        <input class="form-control" type="text" name="q" value="{{ q }}" placeholder="Nom, prenoms, matricule">
+      </div>
+      <div class="col-lg-2 d-grid">
+        <button class="btn btn-outline-primary" type="submit">Appliquer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3 mb-4 kpi-row">
+  <div class="col-6 col-xl-3"><div class="card kpi kpi-total"><div class="card-body"><div class="kpi-label">Total</div><div class="kpi-v">{{ kpis.total }}</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="card kpi kpi-active"><div class="card-body"><div class="kpi-label">Actifs</div><div class="kpi-v">{{ kpis.actifs }}</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="card kpi kpi-suspended"><div class="card-body"><div class="kpi-label">Suspendus</div><div class="kpi-v">{{ kpis.suspendus }}</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="card kpi kpi-archived"><div class="card-body"><div class="kpi-label">Anciens</div><div class="kpi-v">{{ kpis.anciens }}</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="card kpi"><div class="card-body"><div class="kpi-label">A l'étranger</div><div class="kpi-v">{{ kpis.abroad }}</div></div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card dashboard-card">
+      <div class="card-header">Graphiques tableau de bord</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-xl-4">
+            <div class="border rounded p-2 h-100">
+              <div class="small text-muted mb-2">Statuts étudiants</div>
+              <div class="dash-chart-wrap"><canvas id="kpiStatusChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-xl-8">
+            <div class="border rounded p-2 h-100">
+              <div class="small text-muted mb-2">Filiere / Niveau / Promotion</div>
+              <div class="dash-chart-wrap"><canvas id="distributionChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="border rounded p-2">
+              <div class="small text-muted mb-2">Par branche: total vs étranger</div>
+              <div class="dash-chart-wrap-wide"><canvas id="branchChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-7">
+    <div class="card dashboard-card h-100">
+      <div class="card-header">Recherche globale</div>
+      <div class="card-body">
+        <form method="get" class="mb-3">
+          <input type="hidden" name="branch_id" value="{{ selected_branch_id }}">
+          <input class="form-control" type="text" name="q" value="{{ q }}" placeholder="Nom, prenoms, matricule">
+        </form>
+        {% if q %}
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Matricule</th><th>Nom</th><th>Filiere</th></tr></thead>
+            <tbody>{% for s in search_results %}<tr><td><a href="{{ url_for('students.view_student', student_id=s.id) }}">{{ s.matricule }}</a></td><td>{{ s.nom }} {{ s.prenoms }}</td><td>{{ s.filiere }}</td></tr>{% endfor %}</tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="card dashboard-card h-100">
+      <div class="card-header">Repartition rapide</div>
+      <div class="card-body">
+        <div class="accordion" id="statsAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFiliere">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFiliere" aria-expanded="true" aria-controls="collapseFiliere">
+                Par filiere ({{ by_filiere|length }})
+              </button>
+            </h2>
+            <div id="collapseFiliere" class="accordion-collapse collapse show" aria-labelledby="headingFiliere" data-bs-parent="#statsAccordion">
+              <div class="accordion-body p-2">
+                <div class="table-responsive" style="max-height: 180px;">
+                  <table class="table table-sm mb-0">
+                    <tbody>
+                      {% for item in by_filiere %}
+                      <tr><td>{{ item.label }}</td><td class="text-end fw-semibold">{{ item.value }}</td></tr>
+                      {% else %}
+                      <tr><td colspan="2" class="text-muted">Aucune donnee</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingNiveau">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNiveau" aria-expanded="false" aria-controls="collapseNiveau">
+                Par niveau ({{ by_niveau|length }})
+              </button>
+            </h2>
+            <div id="collapseNiveau" class="accordion-collapse collapse" aria-labelledby="headingNiveau" data-bs-parent="#statsAccordion">
+              <div class="accordion-body p-2">
+                <div class="table-responsive" style="max-height: 180px;">
+                  <table class="table table-sm mb-0">
+                    <tbody>
+                      {% for item in by_niveau %}
+                      <tr><td>{{ item.label }}</td><td class="text-end fw-semibold">{{ item.value }}</td></tr>
+                      {% else %}
+                      <tr><td colspan="2" class="text-muted">Aucune donnee</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingPromotion">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePromotion" aria-expanded="false" aria-controls="collapsePromotion">
+                Par promotion ({{ by_promotion|length }})
+              </button>
+            </h2>
+            <div id="collapsePromotion" class="accordion-collapse collapse" aria-labelledby="headingPromotion" data-bs-parent="#statsAccordion">
+              <div class="accordion-body p-2">
+                <div class="table-responsive" style="max-height: 180px;">
+                  <table class="table table-sm mb-0">
+                    <tbody>
+                      {% for item in by_promotion %}
+                      <tr><td>{{ item.label }}</td><td class="text-end fw-semibold">{{ item.value }}</td></tr>
+                      {% else %}
+                      <tr><td colspan="2" class="text-muted">Aucune donnee</td></tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-xl-7">
+    <div class="card dashboard-card h-100">
+      <div class="card-header">Infos événement RDV (pour mails/formulaire)</div>
+      <div class="card-body">
+        <form method="post" class="row g-2">
+          {{ settings_form.hidden_tag() }}
+          <div class="col-12">{{ settings_form.event_title.label(class_='form-label') }}{{ settings_form.event_title(class_='form-control') }}</div>
+          <div class="col-md-6">{{ settings_form.orientation_date.label(class_='form-label') }}{{ settings_form.orientation_date(class_='form-control') }}</div>
+          <div class="col-md-6">{{ settings_form.orientation_phone.label(class_='form-label') }}{{ settings_form.orientation_phone(class_='form-control') }}</div>
+          <div class="col-12">{{ settings_form.orientation_address.label(class_='form-label') }}{{ settings_form.orientation_address(class_='form-control') }}</div>
+          <div class="col-12">{{ settings_form.representative_name.label(class_='form-label') }}{{ settings_form.representative_name(class_='form-control') }}</div>
+          <div class="col-md-4">{{ settings_form.max_appointments_per_day.label(class_='form-label') }}{{ settings_form.max_appointments_per_day(class_='form-control') }}</div>
+          <div class="col-12">{{ settings_form.appointment_slots.label(class_='form-label') }}{{ settings_form.appointment_slots(class_='form-control', rows=4, placeholder='08:00-09:00\n09:00-10:00') }}</div>
+          <div class="col-12">{{ settings_form.submit(class_='btn btn-primary') }}</div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="card dashboard-card h-100">
+      <div class="card-header">Recap événement</div>
+      <div class="card-body">
+        <div class="mb-2"><strong>Événement:</strong> {{ settings.event_title or '-' }}</div>
+        <div class="mb-2"><strong>Date:</strong> {{ settings.orientation_date or '-' }}</div>
+        <div class="mb-2"><strong>Adresse:</strong> {{ settings.orientation_address or '-' }}</div>
+        <div class="mb-2"><strong>Telephone:</strong> {{ settings.orientation_phone or '-' }}</div>
+        <div class="mb-2"><strong>Max RDV/jour:</strong> {{ settings.max_appointments_per_day }}</div>
+        <div class="mb-2"><strong>Representante:</strong> {{ settings.representative_name or '-' }}</div>
+        <div class="mb-2"><strong>Slug RDV:</strong> {{ rdv_event_slug or '-' }}</div>
+        <div class="mb-2"><strong>Lien public RDV:</strong>
+          {% if rdv_public_link %}
+          <a href="{{ rdv_public_link }}" target="_blank" rel="noopener">{{ rdv_public_link }}</a>
+          {% else %}
+          -
+          {% endif %}
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+          {% if rdv_public_link %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ rdv_public_link }}" target="_blank" rel="noopener">Tester le lien RDV</a>
+          {% else %}
+          <button class="btn btn-sm btn-outline-secondary" type="button" disabled>Enregistrer l'événement pour generer le lien</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-7">
+    <div class="card dashboard-card">
+      <div class="card-header">Derniers étudiants</div>
+      <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Matricule</th><th>Nom</th><th>Niveau</th><th>Promo</th></tr></thead><tbody>{% for s in recent_students %}<tr><td>{{ s.matricule }}</td><td>{{ s.nom }} {{ s.prenoms }}</td><td>{{ s.niveau }}</td><td>{{ s.promotion }}</td></tr>{% endfor %}</tbody></table></div>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="card dashboard-card">
+      <div class="card-header">Derniers documents uploades (vue patronne)</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead><tr><th>Étudiant</th><th>Dossier</th><th>Type</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for d in recent_documents %}
+            <tr>
+              <td><a href="{{ url_for('students.view_student', student_id=d.student_id) }}">{{ d.student.matricule }}</a></td>
+              <td>{{ d.target_folder }}</td>
+              <td>{{ d.document_type }}</td>
+              <td>{{ d.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">Aucun document</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card dashboard-card mt-3">
+  <div class="card-header">Suivi par branche (envoyés / a l'étranger)</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>Branche</th><th>Pays</th><th>Total étudiants</th><th>A l'étranger</th></tr></thead>
+      <tbody>
+        {% for r in branch_rows %}
+        <tr>
+          <td>{{ r.name }}</td>
+          <td>{{ r.country_code }}</td>
+          <td>{{ r.total }}</td>
+          <td>{{ r.abroad }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted">Aucune branche disponible</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    if (!window.Chart) return;
+    const d = {{ dashboard_chart_data|tojson }};
+
+    const kpiEl = document.getElementById("kpiStatusChart");
+    if (kpiEl) {
+      new Chart(kpiEl, {
+        type: "doughnut",
+        data: { labels: d.kpi_labels, datasets: [{ data: d.kpi_values, backgroundColor: ["#16a34a", "#f59e0b", "#9ca3af", "#2563eb"] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+
+    const distEl = document.getElementById("distributionChart");
+    if (distEl) {
+      new Chart(distEl, {
+        type: "bar",
+        data: {
+          labels: d.filiere_labels,
+          datasets: [
+            { label: "Filiere", data: d.filiere_values, backgroundColor: "#2563eb" },
+            { label: "Niveau", data: d.niveau_values, backgroundColor: "#10b981" },
+            { label: "Promotion", data: d.promotion_values, backgroundColor: "#f59e0b" }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    const branchEl = document.getElementById("branchChart");
+    if (branchEl) {
+      new Chart(branchEl, {
+        type: "bar",
+        data: {
+          labels: d.branch_labels,
+          datasets: [
+            { label: "Total", data: d.branch_total, backgroundColor: "#1d4ed8" },
+            { label: "A l'étranger", data: d.branch_abroad, backgroundColor: "#7c3aed" }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    const itData = {{ (it_billing_chart_data if it_billing_chart_data else {})|tojson }};
+    const itSplit = document.getElementById("itBillingSplitChart");
+    if (itSplit && itData.split_labels) {
+      new Chart(itSplit, {
+        type: "doughnut",
+        data: { labels: itData.split_labels, datasets: [{ data: itData.split_values, backgroundColor: ["#16a34a", "#f59e0b", "#64748b"] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+
+    const itMonthly = document.getElementById("itBillingMonthlyChart");
+    if (itMonthly && itData.month_labels) {
+      new Chart(itMonthly, {
+        type: "bar",
+        data: { labels: itData.month_labels, datasets: [{ label: "Encaisse", data: itData.month_values, backgroundColor: "#2563eb" }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+    }
+  })();
+</script>
+{% endblock %}
+
+

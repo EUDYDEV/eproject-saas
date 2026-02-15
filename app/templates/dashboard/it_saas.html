@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .it-saas-hero {
+    background:
+      radial-gradient(1000px 460px at 90% -20%, rgba(2, 132, 199, .35), transparent 60%),
+      radial-gradient(900px 420px at -10% 20%, rgba(37, 99, 235, .28), transparent 55%),
+      linear-gradient(180deg, #0b1324 0%, #111827 55%, #0f172a 100%);
+    color: #f8fafc;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 20px 34px rgba(2, 6, 23, .32);
+  }
+  .it-kpi {
+    border-radius: 12px;
+    border: 1px solid #dbeafe;
+    background: #f8fbff;
+    padding: 12px;
+  }
+  .it-kpi-v { font-size: 1.45rem; font-weight: 700; }
+  .it-chart-wrap { height: 210px; }
+  .it-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+</style>
+
+<div class="it-saas-hero mb-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+    <div>
+      <div class="small text-uppercase fw-semibold opacity-75">E-PROJECT</div>
+      <h1 class="h3 mb-2">Tableau de bord IT SaaS</h1>
+      <p class="mb-0">Pilotage des abonnements, validations de paiements et suivi de la facturation plateforme.</p>
+    </div>
+    <div class="d-flex gap-2 align-items-start">
+      <a class="btn btn-light btn-sm" href="{{ url_for('admin.it_subscriptions') }}">Tous les abonnements</a>
+      <a class="btn btn-light btn-sm" href="{{ url_for('admin.it_client_emails') }}">Emails clients</a>
+      <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#agencySwitchModal">Basculer vers une agence</button>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3"><div class="it-kpi"><div class="small text-muted">Total agences</div><div class="it-kpi-v">{{ it_subscription_alerts.total }}</div></div></div>
+  <div class="col-6 col-xl-3"><div class="it-kpi"><div class="small text-muted">Expires</div><div class="it-kpi-v text-danger">{{ it_subscription_alerts.expired }}</div></div></div>
+  <div class="col-6 col-xl-3"><div class="it-kpi"><div class="small text-muted">En validation</div><div class="it-kpi-v text-warning">{{ it_subscription_alerts.pending_review }}</div></div></div>
+  <div class="col-6 col-xl-3"><div class="it-kpi"><div class="small text-muted">En attente paiement</div><div class="it-kpi-v">{{ it_subscription_alerts.pending }}</div></div></div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">Actions rapides IT</div>
+  <div class="card-body d-flex flex-wrap gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('admin.it_subscriptions') }}">Gerer abonnements</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('admin.it_client_emails') }}">Envoyer email clients</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('logs.logs_index') }}">Voir logs plateforme</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('dashboard.chat_room') }}">Service clients</a>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Choisir une agence pour travailler</span>
+    <small class="text-muted">Scope actuel: {% if it_scope_branch_id %}#{{ it_scope_branch_id }}{% else %}Aucun{% endif %}</small>
+  </div>
+  <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#agencySwitchModal">Ouvrir la liste des agences</button>
+    {% if it_scope_branch_id %}
+    <form method="post" action="{{ url_for('auth.set_it_scope') }}" class="m-0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="scope_branch_id" value="0">
+      <button class="btn btn-outline-secondary" type="submit">Revenir mode global</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="modal fade" id="agencySwitchModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Basculer vers une agence</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <input id="agencySearchInput" type="text" class="form-control" placeholder="Rechercher une agence par nom...">
+        </div>
+        <div id="agencySearchList" class="d-flex flex-column gap-2">
+          {% for b in it_scope_branches %}
+          <form method="post" action="{{ url_for('auth.set_it_scope') }}" class="agency-item border rounded p-2 d-flex justify-content-between align-items-center" data-agency-name="{{ (b.name or '')|lower }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="scope_branch_id" value="{{ b.id }}">
+            <input type="hidden" name="go_agency" value="1">
+            <div>
+              <div class="fw-semibold">{{ b.name }}</div>
+              <div class="small text-muted">{{ b.country_code }}{% if b.city %} - {{ b.city }}{% endif %}</div>
+            </div>
+            <button class="btn btn-sm {% if it_scope_branch_id == b.id %}btn-primary{% else %}btn-outline-primary{% endif %}" type="submit">Selectionner</button>
+          </form>
+          {% else %}
+          <div class="text-muted">Aucune agence disponible.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <div class="col-md-3">
+        <label class="form-label mb-1">Annee</label>
+        <select class="form-select" name="sub_year">
+          {% for y in it_billing_filters.year_options %}
+          <option value="{{ y }}" {% if it_billing_filters.selected_year == y %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1">Mois</label>
+        <select class="form-select" name="sub_month">
+          <option value="0" {% if not it_billing_filters.selected_month %}selected{% endif %}>Toute l'annee</option>
+          {% for m in range(1,13) %}
+          <option value="{{ m }}" {% if it_billing_filters.selected_month == m %}selected{% endif %}>{{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-primary" type="submit">Filtrer</button>
+      </div>
+    </form>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">Encaisse</div><div class="fs-5 fw-bold text-success">{{ '%.2f'|format(it_billing_summary.collected_amount or 0) }}</div></div></div>
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">En validation IT</div><div class="fs-5 fw-bold text-warning">{{ '%.2f'|format(it_billing_summary.pending_review_amount or 0) }}</div></div></div>
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">En attente paiement</div><div class="fs-5 fw-bold">{{ '%.2f'|format(it_billing_summary.pending_amount or 0) }}</div></div></div>
+      <div class="col-md-3"><div class="border rounded p-2"><div class="small text-muted">Dossiers a valider</div><div class="fs-5 fw-bold">{{ it_billing_summary.pending_review_count }}</div></div></div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-xl-6">
+        <div class="border rounded p-2 h-100">
+          <div class="small text-muted mb-2">Repartition financiere</div>
+          <div class="it-chart-wrap"><canvas id="itBillingSplitChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-xl-6">
+        <div class="border rounded p-2 h-100">
+          <div class="small text-muted mb-2">Encaisse mensuel</div>
+          <div class="it-chart-wrap"><canvas id="itBillingMonthlyChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header">Clients propriétaires (A-Z)</div>
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end mb-3">
+      <input type="hidden" name="sub_year" value="{{ it_billing_filters.selected_year }}">
+      <input type="hidden" name="sub_month" value="{{ it_billing_filters.selected_month }}">
+      <div class="col-md-5">
+        <label class="form-label mb-1">Recherche client</label>
+        <input class="form-control" type="text" name="client_q" value="{{ it_client_filters.q }}" placeholder="Agence, propriétaire, email, reference...">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1">Statut</label>
+        <select class="form-select" name="client_status">
+          <option value="all" {% if it_client_filters.status == 'all' %}selected{% endif %}>Tous</option>
+          <option value="active" {% if it_client_filters.status == 'active' %}selected{% endif %}>Active</option>
+          <option value="expired" {% if it_client_filters.status == 'expired' %}selected{% endif %}>Expired</option>
+          <option value="pending_review" {% if it_client_filters.status == 'pending_review' %}selected{% endif %}>En validation</option>
+          <option value="pending" {% if it_client_filters.status == 'pending' %}selected{% endif %}>En attente</option>
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-primary" type="submit">Filtrer</button>
+      </div>
+      <div class="col-md-2 d-grid">
+        <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.it_saas_dashboard') }}">Reset</a>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Agence</th>
+            <th>Proprietaire</th>
+            <th>Email</th>
+            <th>Plan</th>
+            <th>Statut</th>
+            <th>Echeance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sub in it_client_rows %}
+          <tr>
+            <td>{{ sub.branch.name if sub.branch else ('Branche #' ~ sub.branch_id) }}</td>
+            <td>{{ sub.owner_user.username if sub.owner_user else '-' }}</td>
+            <td>{{ sub.owner_user.email if sub.owner_user else '-' }}</td>
+            <td>{{ (sub.plan_code or 'starter')|upper }}</td>
+            <td><span class="badge text-bg-light">{{ (sub.status or '-')|upper }}</span></td>
+            <td>{{ sub.ends_at.strftime('%Y-%m-%d') if sub.ends_at else '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-muted">Aucun client pour ce filtre.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Demandes de validation paiement</div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Agence</th>
+          <th>Plan</th>
+          <th>Montant</th>
+          <th>Reference</th>
+          <th>Date demande</th>
+          <th>Action IT</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in it_pending_review_rows %}
+        <tr>
+          <td>{{ sub.branch.name if sub.branch else ('Branche #' ~ sub.branch_id) }}</td>
+          <td>{{ (sub.plan_code or 'starter')|upper }}</td>
+          <td>{{ '%.0f'|format(sub.amount or 0) }} {{ sub.currency or 'XOF' }}</td>
+          <td>{{ sub.payment_reference or 'Aucune reference' }}</td>
+          <td>{{ sub.updated_at.strftime('%Y-%m-%d %H:%M') if sub.updated_at else '-' }}</td>
+          <td class="d-flex gap-1">
+            <form method="post" action="{{ url_for('admin.activate_subscription', subscription_id=sub.id) }}" data-confirm="Valider ce paiement et activer l'abonnement pour 30 jours ?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-success" type="submit">Valider</button>
+            </form>
+            <form method="post" action="{{ url_for('admin.expire_subscription', subscription_id=sub.id) }}" data-confirm="Rejeter ce paiement et expirer l'abonnement ?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger" type="submit">Rejeter</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted">Aucune demande en attente.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const params = new URLSearchParams(window.location.search || "");
+    if (params.get("open_agency_selector") !== "1") return;
+    const modalEl = document.getElementById("agencySwitchModal");
+    if (!modalEl || !window.bootstrap || !window.bootstrap.Modal) return;
+    const modal = new window.bootstrap.Modal(modalEl);
+    modal.show();
+  })();
+
+  (function () {
+    const input = document.getElementById("agencySearchInput");
+    const list = document.getElementById("agencySearchList");
+    if (!input || !list) return;
+    const items = Array.from(list.querySelectorAll(".agency-item"));
+    input.addEventListener("input", function () {
+      const q = (input.value || "").trim().toLowerCase();
+      items.forEach(function (el) {
+        const name = el.getAttribute("data-agency-name") || "";
+        el.style.display = !q || name.indexOf(q) !== -1 ? "flex" : "none";
+      });
+    });
+  })();
+
+  (function () {
+    if (!window.Chart) return;
+    const d = {{ (it_billing_chart_data if it_billing_chart_data else {})|tojson }};
+    const split = document.getElementById("itBillingSplitChart");
+    if (split && d.split_labels) {
+      new Chart(split, {
+        type: "doughnut",
+        data: { labels: d.split_labels, datasets: [{ data: d.split_values, backgroundColor: ["#16a34a", "#f59e0b", "#64748b"] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+    const monthly = document.getElementById("itBillingMonthlyChart");
+    if (monthly && d.month_labels) {
+      new Chart(monthly, {
+        type: "bar",
+        data: { labels: d.month_labels, datasets: [{ label: "Encaisse", data: d.month_values, backgroundColor: "#2563eb" }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+    }
+  })();
+</script>
+{% endblock %}
+

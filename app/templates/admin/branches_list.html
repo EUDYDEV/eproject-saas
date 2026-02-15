@@ -1,0 +1,64 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h1 class="h4">Branches</h1>
+  <a class="btn btn-primary" href="{{ url_for('admin.branches_new') }}">Nouvelle branche</a>
+</div>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-12 col-md-6">
+    <input class="form-control" type="text" name="q" value="{{ q or '' }}" placeholder="Recherche nom, pays, ville">
+  </div>
+  <div class="col-12 col-md-3 d-grid">
+    <button class="btn btn-outline-primary" type="submit">Filtrer</button>
+  </div>
+</form><div class="table-responsive">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>N?</th>
+        <th>Nom</th>
+        <th>Pays</th>
+        <th>Ville</th>
+        <th>Telephone</th>
+        <th>Site web</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in branches %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ b.name }}</td>
+        <td>{{ b.country_code }}</td>
+        <td>{{ b.city or '-' }}</td>
+        <td>{{ b.phone or '-' }}</td>
+        <td>
+          {% if b.website_url %}
+          <a href="{{ b.website_url }}" target="_blank" rel="noopener">{{ b.website_url }}</a>
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td class="d-flex gap-2">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.branches_edit', branch_id=b.id) }}">Editer</a>
+          {% if b.id not in (protected_branch_ids or set()) %}
+          <form method="post" action="{{ url_for('admin.branches_delete', branch_id=b.id) }}" data-confirm="Supprimer cette branche ? Cette action est irreversible.">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+          </form>
+          {% else %}
+          <span class="badge text-bg-secondary">Principale</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-muted">Aucune branche.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+
+
+

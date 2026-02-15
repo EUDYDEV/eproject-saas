@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Utilisateurs</h1>
+  <a class="btn btn-primary" href="{{ url_for('admin.users_new') }}">Nouveau</a>
+</div>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-12 col-md-5">
+    <input class="form-control" type="text" name="q" value="{{ q or '' }}" placeholder="Recherche username, email">
+  </div>
+  <div class="col-12 col-md-4">
+    <select class="form-select" name="branch_id">
+      <option value="0">Toutes les branches</option>
+      {% for b in branch_filter_options %}
+      <option value="{{ b.id }}" {% if branch_filter == b.id %}selected{% endif %}>{{ b.name }} ({{ b.country_code }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-3 d-grid">
+    <button class="btn btn-outline-primary" type="submit">Filtrer</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>NÂ°</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Branche</th>
+        <th>Actif</th>
+        <th>Force MDP</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.email }}</td>
+        <td>
+          {{ u.role }}
+          {% if u.id in owner_user_ids or u.role == 'FOUNDER' %}
+          <span class="badge text-bg-info ms-1">Proprietaire agence</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if u.branch %}
+          {{ u.branch.name }} ({{ u.branch.country_code }})
+          {% else %}
+          -
+          {% endif %}
+        </td>
+        <td>{{ 'Oui' if u.is_active else 'Non' }}</td>
+        <td>{{ 'Oui' if u.must_change_password else 'Non' }}</td>
+        <td class="d-flex gap-1 flex-wrap">
+          {% if u.id in manageable_user_ids %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.users_edit', user_id=u.id) }}">Editer</a>
+          <a class="btn btn-sm btn-outline-success" href="{{ url_for('admin.users_send_email', user_id=u.id) }}">Envoyer mail</a>
+          {% if u.id != current_user.id %}
+          <form method="post" action="{{ url_for('admin.users_delete', user_id=u.id) }}" data-confirm="Supprimer cet utilisateur ?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+          </form>
+          {% endif %}
+          {% else %}
+          <span class="badge text-bg-light">Lecture seule</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+
+

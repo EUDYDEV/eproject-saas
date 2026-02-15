@@ -1,0 +1,31 @@
+﻿{% extends "base.html" %}
+{% block meta_title %}{{ site_name }} | À propos{% endblock %}
+{% block meta_description %}Decouvrez {{ site_name }}, sa mission et sa vision pour accompagner les agences d'etudes.{% endblock %}
+{% block auth_content %}
+<style>
+  .pub-wrap { min-height: 100vh; background:
+      radial-gradient(1200px 520px at 85% -10%, rgba(37,99,235,.30), transparent 60%),
+      radial-gradient(1100px 500px at -15% 10%, rgba(14,165,233,.22), transparent 55%),
+      linear-gradient(180deg, #0f172a 0%, #0b1224 45%, #111827 100%); color: #f8fafc; margin: -1rem -0.75rem 0; padding: 1rem 0.75rem 2rem; }
+  .pub-card { background: rgba(15,23,42,.72); border: 1px solid rgba(148,163,184,.25); border-radius: 16px; }
+  .pub-link { color: #cbd5e1; text-decoration: none; }
+  .pub-link:hover { color: #fff; }
+  .public-nav-brand { color: #fff; text-decoration: none; }
+  .public-nav-brand:hover { color: #e2e8f0; }
+  .public-nav-link { color: #cbd5e1; text-decoration: none; }
+  .public-nav-link:hover { color: #fff; }
+</style>
+<div class="pub-wrap">
+  <div class="container-xxl">
+    {% include "_public_nav.html" %}
+
+    <section class="pub-card p-4 p-lg-5">
+      <h1 class="h2 mb-3">À propos de {{ site_name }}</h1>
+      <p class="text-light-emphasis">{{ settings.site_tagline or "Plateforme SaaS multi-agences pour la gestion des etudes a l'étranger." }}</p>
+      <p class="mb-0">Notre mission: aider les agences a centraliser la gestion des étudiants, des rendez-vous, des dossiers, des emails et des abonnements dans une application fiable, securisee et evolutive.</p>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+

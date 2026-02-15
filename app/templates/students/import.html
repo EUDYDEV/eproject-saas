@@ -1,0 +1,12 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Import Étudiants</h1>
+<p>Formats acceptes: CSV, Excel (.xlsx, .xlsm, .xltx, .xltm) et PDF texte.</p>
+<p>Colonnes attendues: matricule, nom, prenoms, sexe, date_naissance, email, telephone, adresse, filiere, niveau, promotion, statut</p>
+<form method="post" enctype="multipart/form-data" class="card p-3">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="file" name="file" class="form-control mb-3" accept=".csv,.xlsx,.xlsm,.xltx,.xltm,.pdf" required>
+  <button class="btn btn-primary" type="submit">Importer</button>
+</form>
+{% endblock %}
+

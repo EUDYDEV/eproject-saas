@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .founder-chart-wrap { height: 220px; }
+  .founder-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+  .founder-soft-card { border: 1px solid #dbeafe; border-radius: 14px; overflow: hidden; }
+  .founder-soft-head { background: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%); border-bottom: 1px solid #dbeafe; }
+  .founder-kpi { border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; }
+  .founder-kpi .label { color: #64748b; font-size: .8rem; }
+  .founder-kpi .value { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+  .table-founder thead th { white-space: nowrap; background: #f8fafc; position: sticky; top: 0; z-index: 1; }
+  .table-founder td, .table-founder th { vertical-align: middle; }
+  .rank-pill { display: inline-flex; min-width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 999px; font-weight: 700; }
+  .rank-1 { background: #fef9c3; color: #854d0e; }
+  .rank-2 { background: #e2e8f0; color: #334155; }
+  .rank-3 { background: #ffedd5; color: #9a3412; }
+  .rank-other { background: #eff6ff; color: #1e3a8a; }
+  .badge-soft { border: 1px solid #cbd5e1; background: #f8fafc; color: #334155; border-radius: 999px; padding: .2rem .55rem; font-size: .75rem; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .compact-note { color: #64748b; font-size: .82rem; }
+  .founder-scroll { max-height: 62vh; overflow: auto; }
+  @media (max-width: 576px) { .founder-chart-wrap { height: 180px; } }
+  @media (min-width: 1400px) { .founder-chart-wrap { height: 200px; } }
+</style>
+
+<h1 class="h4 mb-3">Dashboard Fondateur (Global)</h1>
+<form class="row g-2 mb-3" method="get">
+  <div class="col-12 col-md-6">
+    <select class="form-select" name="branch_id">
+      <option value="0">Toute l'entreprise</option>
+      {% for b in branch_filter_options %}
+      <option value="{{ b.id }}" {% if branch_filter == b.id %}selected{% endif %}>{{ b.name }} ({{ b.country_code }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-3 d-grid">
+    <button class="btn btn-outline-primary" type="submit">Filtrer</button>
+  </div>
+</form>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Commissions dues</div><div class="value mono">{{ '%.2f'|format(pending_commissions or 0) }}</div></div></div>
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Commissions encaissees</div><div class="value mono text-success">{{ '%.2f'|format(paid_commissions or 0) }}</div></div></div>
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Étudiants sans branche</div><div class="value mono">{{ students_unassigned }}</div></div></div>
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Agents actifs</div><div class="value mono">{{ top_agents|length }}</div></div></div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Total paiements dossiers</div><div class="value mono">{{ '%.2f'|format(total_payments_amount or 0) }}</div></div></div>
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Montants payes</div><div class="value mono text-success">{{ '%.2f'|format(paid_payments_amount or 0) }}</div></div></div>
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Montants non payes</div><div class="value mono text-warning">{{ '%.2f'|format(unpaid_payments_amount or 0) }}</div></div></div>
+  <div class="col-md-6 col-xl-3"><div class="founder-kpi p-3 h-100"><div class="label">Lignes payees / non payees</div><div class="value mono">{{ paid_payments_count }} / {{ unpaid_payments_count }}</div></div></div>
+</div>
+
+<div class="card founder-soft-card mb-3">
+  <div class="card-header founder-soft-head fw-semibold">Graphiques globaux</div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-xl-6"><div class="border rounded p-2 h-100"><div class="small text-muted mb-2">Étudiants par branche</div><div class="founder-chart-wrap"><canvas id="founderBranchChart"></canvas></div></div></div>
+      <div class="col-xl-6"><div class="border rounded p-2 h-100"><div class="small text-muted mb-2">Dossiers par statut</div><div class="founder-chart-wrap"><canvas id="founderStatusChart"></canvas></div></div></div>
+      <div class="col-xl-6"><div class="border rounded p-2 h-100"><div class="small text-muted mb-2">Dossiers par entite</div><div class="founder-chart-wrap"><canvas id="founderEntityChart"></canvas></div></div></div>
+      <div class="col-xl-6"><div class="border rounded p-2 h-100"><div class="small text-muted mb-2">Top agents (creations)</div><div class="founder-chart-wrap"><canvas id="founderAgentsChart"></canvas></div></div></div>
+      <div class="col-xl-6"><div class="border rounded p-2 h-100"><div class="small text-muted mb-2">Paiements valides vs non valides</div><div class="founder-chart-wrap"><canvas id="founderPaymentsSplitChart"></canvas></div></div></div>
+      <div class="col-xl-6"><div class="border rounded p-2 h-100"><div class="small text-muted mb-2">Montants payes/non payes par branche</div><div class="founder-chart-wrap"><canvas id="founderPaymentsBranchChart"></canvas></div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-xl-4">
+    <div class="card founder-soft-card h-100">
+      <div class="card-header founder-soft-head fw-semibold">Top branches / pays (étudiants)</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-founder mb-0">
+          <thead><tr><th>#</th><th>Branche</th><th>Pays</th><th class="text-end">Total</th></tr></thead>
+          <tbody>
+            {% for r in students_by_branch %}
+            <tr>
+              <td>
+                <span class="rank-pill {% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% else %}rank-other{% endif %}">{{ loop.index }}</span>
+              </td>
+              <td>{{ r[1] }}</td>
+              <td><span class="badge-soft">{{ r[2] }}</span></td>
+              <td class="text-end mono fw-semibold">{{ r[3] }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">Aucune donnee</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card founder-soft-card h-100">
+      <div class="card-header founder-soft-head fw-semibold">Dossiers par statut</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-founder mb-0">
+          <thead><tr><th>Statut</th><th class="text-end">Total</th></tr></thead>
+          <tbody>
+            {% for r in cases_by_status %}
+            {% set raw = r[0] %}
+            {% set label = 'Dossier en cours' if raw == 'dossier_en_cours' else ('Nouveau' if raw == 'nouveau' else ('Admission' if raw == 'admission' else ('Visa' if raw == 'visa' else ('Billet' if raw == 'billet' else ('Arrive' if raw == 'arrive' else ('Installe' if raw == 'installe' else ('Abandonne' if raw == 'abandonne' else raw|replace('_', ' ')|title))))))) %}
+            <tr><td>{{ label }}</td><td class="text-end mono fw-semibold">{{ r[1] }}</td></tr>
+            {% else %}
+            <tr><td colspan="2" class="text-muted">Aucune donnee</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-4">
+    <div class="card founder-soft-card h-100">
+      <div class="card-header founder-soft-head fw-semibold">Top agents (étudiants ramenes)</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-founder mb-0">
+          <thead><tr><th>#</th><th>Agent</th><th>Branche</th><th class="text-end">Total</th></tr></thead>
+          <tbody>
+            {% for a in top_agents %}
+            <tr>
+              <td class="mono">{{ loop.index }}</td>
+              <td>{{ a[1] }}</td>
+              <td>{{ a[3] or 'GLOBAL' }}</td>
+              <td class="text-end mono fw-semibold">{{ a[4] }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">Aucune creation tracee</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card founder-soft-card mb-3">
+  <div class="card-header founder-soft-head d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Detail performance par pays / branche</span>
+    <span class="compact-note">Vue complete et comparee (étudiants + pipeline dossiers)</span>
+  </div>
+  <div class="founder-scroll table-responsive">
+    <table class="table table-sm table-founder mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Branche</th><th>Pays</th><th>Total</th><th>Actifs</th><th>Suspendus</th><th>Anciens</th><th>Prospects</th><th>En procedure</th><th>Partis</th><th>Sur place</th><th>Termines</th><th>Nouveau</th><th>Dossier</th><th>Admission</th><th>Visa</th><th>Billet</th><th>Arrive</th><th>Installe</th><th>Abandonne</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in country_branch_breakdown %}
+        <tr>
+          <td class="fw-semibold">{{ row.branch_name }}</td>
+          <td><span class="badge-soft">{{ row.country_code }}</span></td>
+          <td class="mono fw-semibold">{{ row.students_total }}</td>
+          <td class="mono">{{ row.actifs }}</td>
+          <td class="mono">{{ row.suspendus }}</td>
+          <td class="mono">{{ row.anciens }}</td>
+          <td class="mono">{{ row.prospects }}</td>
+          <td class="mono">{{ row.en_procedure }}</td>
+          <td class="mono">{{ row.partis }}</td>
+          <td class="mono">{{ row.sur_place }}</td>
+          <td class="mono">{{ row.termines }}</td>
+          <td class="mono">{{ row.c_nouveau }}</td>
+          <td class="mono">{{ row.c_dossier }}</td>
+          <td class="mono">{{ row.c_admission }}</td>
+          <td class="mono">{{ row.c_visa }}</td>
+          <td class="mono">{{ row.c_billet }}</td>
+          <td class="mono">{{ row.c_arrive }}</td>
+          <td class="mono">{{ row.c_installe }}</td>
+          <td class="mono">{{ row.c_abandonne }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="19" class="text-muted">Aucune donnee</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-12">
+    <div class="card founder-soft-card">
+      <div class="card-header founder-soft-head fw-semibold">Paiements par branche (dossiers étudiants)</div>
+      <div class="table-responsive">
+        <table class="table table-sm table-founder mb-0 align-middle">
+          <thead><tr><th>Branche</th><th class="text-end">Total</th><th class="text-end">Paye</th><th class="text-end">Non paye</th></tr></thead>
+          <tbody>
+            {% for r in payments_by_branch_rows %}
+            <tr>
+              <td>{{ r[0] }}</td>
+              <td class="text-end mono">{{ '%.2f'|format(r[1] or 0) }}</td>
+              <td class="text-end mono text-success fw-semibold">{{ '%.2f'|format(r[2] or 0) }}</td>
+              <td class="text-end mono text-warning fw-semibold">{{ '%.2f'|format(r[3] or 0) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-muted">Aucun paiement enregistré.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-6">
+    <div class="card founder-soft-card"><div class="card-header founder-soft-head fw-semibold">Top ecoles</div>
+      <div class="table-responsive"><table class="table table-sm table-founder mb-0"><thead><tr><th>Ecole</th><th class="text-end">Total</th></tr></thead><tbody>{% for r in cases_by_school %}<tr><td>{{ r[0] }}</td><td class="text-end mono fw-semibold">{{ r[1] }}</td></tr>{% else %}<tr><td colspan="2" class="text-muted">Aucune donnee</td></tr>{% endfor %}</tbody></table></div>
+    </div>
+  </div>
+  <div class="col-xl-6">
+    <div class="card founder-soft-card"><div class="card-header founder-soft-head fw-semibold">Arrivee / Logement / Mentor (recent)</div>
+      <div class="table-responsive"><table class="table table-sm table-founder mb-0"><thead><tr><th>Dossier</th><th>Logement</th><th>Pickup</th><th>Mentor</th></tr></thead><tbody>{% for a in recent_support %}<tr><td>#{{ a.case_id }}</td><td>{{ a.lodging_status or '-' }}</td><td>{{ a.pickup_status or '-' }}</td><td>{{ a.mentor_assigned or '-' }}</td></tr>{% else %}<tr><td colspan="4" class="text-muted">Aucun suivi</td></tr>{% endfor %}</tbody></table></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    if (!window.Chart) return;
+    const d = {{ founder_chart_data|tojson }};
+
+    const b = document.getElementById("founderBranchChart");
+    if (b) {
+      new Chart(b, {
+        type: "bar",
+        data: { labels: d.branch_labels, datasets: [{ label: "Étudiants", data: d.branch_values, backgroundColor: "#2563eb" }] },
+        options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, scales: { x: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+      });
+    }
+
+    const s = document.getElementById("founderStatusChart");
+    if (s) {
+      new Chart(s, {
+        type: "doughnut",
+        data: { labels: d.status_labels, datasets: [{ data: d.status_values, backgroundColor: ["#94a3b8", "#60a5fa", "#34d399", "#f59e0b", "#f97316", "#22c55e", "#0ea5e9", "#ef4444"] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+
+    const e = document.getElementById("founderEntityChart");
+    if (e) {
+      new Chart(e, {
+        type: "bar",
+        data: { labels: d.entity_labels, datasets: [{ label: "Dossiers", data: d.entity_values, backgroundColor: "#16a34a" }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+      });
+    }
+
+    const a = document.getElementById("founderAgentsChart");
+    if (a) {
+      new Chart(a, {
+        type: "bar",
+        data: { labels: d.agent_labels, datasets: [{ label: "Étudiants créées", data: d.agent_values, backgroundColor: "#7c3aed" }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    const ps = document.getElementById("founderPaymentsSplitChart");
+    if (ps) {
+      new Chart(ps, {
+        type: "doughnut",
+        data: { labels: d.payment_split_labels, datasets: [{ data: d.payment_split_values, backgroundColor: ["#22c55e", "#f59e0b"] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+
+    const pb = document.getElementById("founderPaymentsBranchChart");
+    if (pb) {
+      new Chart(pb, {
+        type: "bar",
+        data: {
+          labels: d.payment_branch_labels,
+          datasets: [
+            { label: "Paye", data: d.payment_branch_paid, backgroundColor: "#16a34a" },
+            { label: "Non paye", data: d.payment_branch_unpaid, backgroundColor: "#f59e0b" }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+    }
+  })();
+</script>
+{% endblock %}
+
+
+

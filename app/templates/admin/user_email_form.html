@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Email utilisateur</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('admin.users_list') }}">Retour</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="mb-3">
+      <div><strong>Utilisateur:</strong> {{ user.username }}</div>
+      <div><strong>Email:</strong> {{ user.email }}</div>
+      <div><strong>Role:</strong> {{ user.role }}</div>
+    </div>
+    <form method="post" class="row g-3">
+      {{ form.hidden_tag() }}
+      <div class="col-12">
+        {{ form.subject.label(class_='form-label') }}
+        {{ form.subject(class_='form-control') }}
+      </div>
+      <div class="col-12">
+        {{ form.body.label(class_='form-label') }}
+        {{ form.body(class_='form-control', rows=8, placeholder='Ecris ton message...') }}
+      </div>
+      <div class="col-12">
+        {{ form.submit(class_='btn btn-success') }}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

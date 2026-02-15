@@ -1,0 +1,32 @@
+﻿<nav class="public-nav d-flex justify-content-between align-items-center py-3">
+  <div class="h4 fw-bold mb-0">
+    <a class="public-nav-brand" href="{{ url_for('dashboard.index') }}">{{ site_name }}</a>
+  </div>
+
+  <div class="d-none d-lg-flex gap-3 align-items-center">
+    <a class="public-nav-link" href="{{ url_for('dashboard.index') }}">Accueil</a>
+    <a class="public-nav-link" href="{{ url_for('dashboard.public_about') }}">À propos</a>
+    <a class="public-nav-link" href="{{ url_for('dashboard.public_services') }}">Nos services</a>
+    <a class="public-nav-link" href="{{ url_for('dashboard.public_contact') }}">Contact</a>
+    <a class="btn btn-outline-light btn-sm" href="{{ url_for('auth.login') }}">Connexion</a>
+  </div>
+
+  <button class="btn btn-outline-light d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#publicNavDrawer" aria-controls="publicNavDrawer" aria-label="Menu">
+    <span class="fw-semibold">Menu</span>
+  </button>
+</nav>
+
+<div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="publicNavDrawer" aria-labelledby="publicNavDrawerLabel">
+  <div class="offcanvas-header border-bottom border-secondary-subtle">
+    <h5 class="offcanvas-title" id="publicNavDrawerLabel">Navigation</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column gap-2">
+    <a class="btn btn-outline-light text-start" href="{{ url_for('dashboard.index') }}">Accueil</a>
+    <a class="btn btn-outline-light text-start" href="{{ url_for('dashboard.public_about') }}">À propos</a>
+    <a class="btn btn-outline-light text-start" href="{{ url_for('dashboard.public_services') }}">Nos services</a>
+    <a class="btn btn-outline-light text-start" href="{{ url_for('dashboard.public_contact') }}">Contact</a>
+    <a class="btn btn-primary text-start mt-2" href="{{ url_for('auth.login') }}">Connexion</a>
+  </div>
+</div>
+

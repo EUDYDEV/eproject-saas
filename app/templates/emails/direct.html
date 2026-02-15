@@ -1,0 +1,90 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Email personnalise</h1>
+<div class="alert alert-info">Saisis simplement ton message. Le systeme met en forme automatiquement.</div>
+<form method="post" class="row g-3">{{ form.hidden_tag() }}
+<div class="col-md-3">{{ form.target.label(class_='form-label') }}{{ form.target(class_='form-select') }}</div>
+<div class="col-md-3">{{ form.branch_id.label(class_='form-label') }}{{ form.branch_id(class_='form-select') }}</div>
+<div class="col-md-4">{{ form.cta_label.label(class_='form-label') }}{{ form.cta_label(class_='form-control', placeholder='Inscrivez-vous et reservez votre place') }}</div>
+<div class="col-12">{{ form.subject.label(class_='form-label') }}{{ form.subject(class_='form-control') }}</div>
+<div class="col-12">{{ form.body_html.label(class_='form-label') }}{{ form.body_html(class_='form-control', rows=10, placeholder='Ecris ton message ici...') }}</div>
+<div class="col-12">{{ form.body_text.label(class_='form-label') }}{{ form.body_text(class_='form-control', rows=3) }}</div>
+<div class="col-12 d-flex gap-2">
+  <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailPreviewModal">Apercu</button>
+  {{ form.submit(class_='btn btn-primary') }}
+</div>
+</form>
+
+<div class="modal fade" id="emailPreviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Apercu email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body bg-light">
+        <div class="mx-auto" style="max-width: 720px;">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+              <h5 id="previewSubject" class="fw-bold mb-3"></h5>
+              <div id="previewBody" class="mb-3" style="line-height:1.65;"></div>
+              <div class="text-center my-3">
+                <a id="previewCta" href="#" class="btn btn-primary" style="pointer-events:none;"></a>
+              </div>
+              <div id="previewLogos" class="text-center mt-4"></div>
+              <div class="text-muted small mt-3">Message automatique de l'agence</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var modal = document.getElementById("emailPreviewModal");
+    if (!modal) return;
+
+    var subjectEl = document.getElementById("{{ form.subject.id }}");
+    var bodyEl = document.getElementById("{{ form.body_html.id }}");
+    var ctaEl = document.getElementById("{{ form.cta_label.id }}");
+
+    function escapeHtml(s) {
+      return (s || "").replace(/[&<>"']/g, function (m) {
+        return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m];
+      });
+    }
+
+    function buildBodyHtml(raw) {
+      var txt = (raw || "").trim();
+      if (!txt) return "<p class='text-muted'>Aucun message.</p>";
+      if (txt.indexOf("<") !== -1 && txt.indexOf(">") !== -1) return txt;
+      return txt
+        .split(/\n\s*\n/)
+        .map(function (p) { return "<p>" + escapeHtml(p).replace(/\n/g, "<br>") + "</p>"; })
+        .join("");
+    }
+
+    modal.addEventListener("show.bs.modal", function () {
+      document.getElementById("previewSubject").textContent = subjectEl.value || "Sans sujet";
+      document.getElementById("previewBody").innerHTML = buildBodyHtml(bodyEl.value || "");
+
+      var cta = document.getElementById("previewCta");
+      var ctaLabel = (ctaEl.value || "").trim();
+      if (ctaLabel) {
+        cta.textContent = ctaLabel;
+        cta.style.display = "inline-block";
+      } else {
+        cta.style.display = "none";
+      }
+
+      document.getElementById("previewLogos").innerHTML = "";
+    });
+  })();
+</script>
+{% endblock %}
+

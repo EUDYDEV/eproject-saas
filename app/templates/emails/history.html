@@ -1,0 +1,56 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Historique envoi</h1>
+  {% if (current_user.role or '')|upper in ['FOUNDER', 'ADMIN_BRANCH', 'IT'] %}
+  <form method="post" action="{{ url_for('emails.clear_dispatch_history') }}" data-confirm="Supprimer tout l historique email ?">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-outline-danger">Vider l historique</button>
+  </form>
+  {% endif %}
+</div>
+<div class="card mb-3">
+  <div class="card-header">Dispatch</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>Date</th><th>Email</th><th>Type</th><th>Statut</th><th>Erreur</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ r.recipient_email }}</td>
+        <td>{{ r.recipient_type }}</td>
+        <td>{{ r.status }}</td>
+        <td>{{ r.error_message or '' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-muted">Aucun envoi.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Email logs SMTP</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>Date</th><th>To</th><th>Sujet</th><th>Statut</th><th>Erreur</th></tr></thead>
+      <tbody>
+      {% for l in logs %}
+      <tr>
+        <td>{{ l.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ l.to_email }}</td>
+        <td>{{ l.subject }}</td>
+        <td>{{ l.status }}</td>
+        <td>{{ l.error or '' }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-muted">Aucun log SMTP.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

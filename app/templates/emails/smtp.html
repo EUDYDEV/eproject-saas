@@ -1,0 +1,19 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Configuration SMTP</h1>
+<div class="alert alert-info py-2">{{ smtp_scope_label }}</div>
+<div class="alert alert-secondary py-2">
+  Renseigne les informations SMTP de ton agence. Ces paramètres seront utilises uniquement pour cette agence.
+</div>
+<form method="post" class="row g-3">
+  {{ form.hidden_tag() }}
+  <div class="col-md-4">{{ form.host.label(class_='form-label') }}{{ form.host(class_='form-control') }}</div>
+  <div class="col-md-2">{{ form.port.label(class_='form-label') }}{{ form.port(class_='form-control') }}</div>
+  <div class="col-md-3">{{ form.username.label(class_='form-label') }}{{ form.username(class_='form-control') }}</div>
+  <div class="col-md-3">{{ form.password.label(class_='form-label') }}{{ form.password(class_='form-control') }}</div>
+  <div class="col-md-4">{{ form.from_email.label(class_='form-label') }}{{ form.from_email(class_='form-control') }}</div>
+  <div class="col-md-4 d-flex align-items-end pb-2">{{ form.use_tls() }} <span class="ms-2">{{ form.use_tls.label.text }}</span></div>
+  <div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+</form>
+{% endblock %}
+

@@ -1,0 +1,40 @@
+﻿services:
+  - type: web
+    name: innovformation-web
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: innovformation-db
+          property: connectionString
+      - key: RATELIMIT_STORAGE_URI
+        value: memory://
+  - type: cron
+    name: innovformation-subscriptions-cron
+    env: python
+    schedule: "*/10 * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: flask --app run.py process-subscriptions
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: innovformation-db
+          property: connectionString
+      - key: RATELIMIT_STORAGE_URI
+        value: memory://
+
+databases:
+  - name: innovformation-db
+    plan: free
+    databaseName: innovformation
+    user: innovformation
+
+
+

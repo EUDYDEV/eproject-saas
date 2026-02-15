@@ -1,0 +1,67 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Client: {{ owner.username }}</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_client_emails') }}">Retour liste clients</a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="card h-100">
+      <div class="card-header">Proprietaire</div>
+      <div class="card-body">
+        <div><strong>Nom:</strong> {{ owner.username }}</div>
+        <div><strong>Email:</strong> {{ owner.email }}</div>
+        <div><strong>Role:</strong> {{ owner.role }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card h-100">
+      <div class="card-header">Branches de l'agence</div>
+      <div class="card-body">
+        {% if branches %}
+        <ul class="mb-0">
+          {% for b in branches %}
+          <li>{{ b.name }} ({{ b.country_code }}){% if owner.branch_id == b.id %} - principale{% endif %}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <span class="text-muted">Aucune branche.</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Employes / responsables</div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Branche</th>
+          <th>Actif</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td>{{ u.email }}</td>
+          <td>{{ u.role }}</td>
+          <td>{{ u.branch.name if u.branch else '-' }}</td>
+          <td>{{ 'Oui' if u.is_active else 'Non' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-muted">Aucun employe pour ce client.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

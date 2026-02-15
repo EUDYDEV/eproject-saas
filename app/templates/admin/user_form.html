@@ -1,0 +1,16 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">{% if mode == 'create' %}Nouvel utilisateur{% else %}Modifier utilisateur{% endif %}</h1>
+<form method="post" class="row g-3">
+{{ form.hidden_tag() }}
+<div class="col-md-4">{{ form.username.label(class_='form-label') }}{{ form.username(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.email.label(class_='form-label') }}{{ form.email(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.role.label(class_='form-label') }}{{ form.role(class_='form-select') }}</div>
+<div class="col-md-4">{{ form.branch_id.label(class_='form-label') }}{{ form.branch_id(class_='form-select') }}</div>
+<div class="col-md-4">{{ form.password.label(class_='form-label') }}{{ form.password(class_='form-control') }}</div>
+<div class="col-md-4">{{ form.is_active() }} {{ form.is_active.label }}</div>
+<div class="col-md-4">{{ form.must_change_password() }} {{ form.must_change_password.label }}</div>
+<div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+</form>
+{% endblock %}
+

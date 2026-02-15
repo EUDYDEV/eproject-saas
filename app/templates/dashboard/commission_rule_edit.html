@@ -1,0 +1,25 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Modifier regle commission #{{ rule.id }}</h1>
+  <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.commissions') }}">Retour</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      {{ form.hidden_tag() }}
+      <div class="col-md-3">{{ form.entity_id.label(class_='form-label') }}{{ form.entity_id(class_='form-select') }}</div>
+      <div class="col-md-3">{{ form.school_id.label(class_='form-label') }}{{ form.school_id(class_='form-select') }}</div>
+      <div class="col-md-2">{{ form.amount_per_student.label(class_='form-label') }}{{ form.amount_per_student(class_='form-control') }}</div>
+      <div class="col-md-2">{{ form.currency.label(class_='form-label') }}{{ form.currency(class_='form-control') }}</div>
+      <div class="col-md-2">{{ form.trigger_status.label(class_='form-label') }}{{ form.trigger_status(class_='form-select') }}</div>
+      <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a class="btn btn-outline-secondary" href="{{ url_for('dashboard.commissions') }}">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

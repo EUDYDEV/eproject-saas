@@ -1,0 +1,77 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Liste des clients SaaS</h1>
+  <a class="btn btn-outline-primary" href="{{ url_for('dashboard.it_saas_dashboard') }}">Retour dashboard IT</a>
+</div>
+
+<div class="card">
+  <div class="card-body border-bottom">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-8">
+        <label class="form-label mb-1">Recherche client</label>
+        <input class="form-control" type="text" name="q" value="{{ q or '' }}" placeholder="Agence, propriétaire, email, statut, plan">
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+      </div>
+      <div class="col-md-2 d-grid">
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_clients_list') }}">Effacer</a>
+      </div>
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Agence</th>
+          <th>Proprietaire</th>
+          <th>Email</th>
+          <th>Statut abo</th>
+          <th>Plan</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in subscriptions %}
+        <tr>
+          <td>{{ sub.branch.name if sub.branch else ('Branche #' ~ sub.branch_id) }}</td>
+          <td>{{ sub.owner_user.username if sub.owner_user else '-' }}</td>
+          <td>{{ sub.owner_user.email if sub.owner_user else '-' }}</td>
+          <td>{{ (sub.status or '-')|upper }}</td>
+          <td>{{ (sub.plan_code or 'starter')|upper }}</td>
+          <td>
+            {% if sub.owner_user %}
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.it_client_owner_users', owner_user_id=sub.owner_user.id) }}">Voir</a>
+            {% else %}
+            <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted">Aucun client pour le moment.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if pagination and pagination.pages > 1 %}
+<div class="d-flex justify-content-between align-items-center mt-3">
+  <div class="small text-muted">Page {{ pagination.page }} / {{ pagination.pages }}</div>
+  <div class="btn-group">
+    {% if pagination.has_prev %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_clients_list', page=pagination.prev_num, q=q) }}">Precedent</a>
+    {% else %}
+    <button class="btn btn-outline-secondary" disabled>Precedent</button>
+    {% endif %}
+
+    {% if pagination.has_next %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin.it_clients_list', page=pagination.next_num, q=q) }}">Suivant</a>
+    {% else %}
+    <button class="btn btn-outline-secondary" disabled>Suivant</button>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+

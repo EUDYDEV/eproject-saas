@@ -1,0 +1,6 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Reponses: {{ current_form.title }}</h1>
+<table class="table"><thead><tr><th>ID</th><th>Email</th><th>Date</th></tr></thead><tbody>{% for r in responses %}<tr><td>{{ r.id }}</td><td>{{ r.responder_email }}</td><td>{{ r.submitted_at }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
+

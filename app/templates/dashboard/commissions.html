@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  .commission-chart-wrap { height: 185px; }
+  .commission-chart-wrap-wide { height: 145px; }
+  .commission-chart-wrap canvas, .commission-chart-wrap-wide canvas { width: 100% !important; height: 100% !important; }
+  @media (max-width: 576px) {
+    .commission-chart-wrap { height: 160px; }
+    .commission-chart-wrap-wide { height: 130px; }
+  }
+  @media (min-width: 1400px) {
+    .commission-chart-wrap { height: 175px; }
+    .commission-chart-wrap-wide { height: 140px; }
+  }
+</style>
+<h1 class="h4 mb-3">Commissions partenaires</h1>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Mois</label>
+        <select class="form-select" name="mois">
+          <option value="0" {% if selected_month == 0 %}selected{% endif %}>Toute l'annee</option>
+          <option value="1" {% if selected_month == 1 %}selected{% endif %}>Janvier</option>
+          <option value="2" {% if selected_month == 2 %}selected{% endif %}>Fevrier</option>
+          <option value="3" {% if selected_month == 3 %}selected{% endif %}>Mars</option>
+          <option value="4" {% if selected_month == 4 %}selected{% endif %}>Avril</option>
+          <option value="5" {% if selected_month == 5 %}selected{% endif %}>Mai</option>
+          <option value="6" {% if selected_month == 6 %}selected{% endif %}>Juin</option>
+          <option value="7" {% if selected_month == 7 %}selected{% endif %}>Juillet</option>
+          <option value="8" {% if selected_month == 8 %}selected{% endif %}>Aout</option>
+          <option value="9" {% if selected_month == 9 %}selected{% endif %}>Septembre</option>
+          <option value="10" {% if selected_month == 10 %}selected{% endif %}>Octobre</option>
+          <option value="11" {% if selected_month == 11 %}selected{% endif %}>Novembre</option>
+          <option value="12" {% if selected_month == 12 %}selected{% endif %}>Decembre</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Annee</label>
+        <select class="form-select" name="annee">
+          {% for y in year_options %}
+          <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button class="btn btn-outline-primary">Filtrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><div class="small text-muted">Total a recevoir</div><div class="fs-4 fw-bold">{{ '%.2f'|format(pending_total) }}</div></div></div></div>
+  <div class="col-md-6 col-xl-3"><div class="card"><div class="card-body"><div class="small text-muted">Total encaisse</div><div class="fs-4 fw-bold">{{ '%.2f'|format(paid_total) }}</div></div></div></div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span>Graphiques commissions</span>
+    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#commissionCharts" aria-expanded="false">
+      Afficher / Masquer
+    </button>
+  </div>
+  <div id="commissionCharts" class="collapse show">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-lg-4">
+          <div class="border rounded p-2 h-100">
+            <div class="small text-muted mb-2">Repartition periode</div>
+            <div class="commission-chart-wrap"><canvas id="commissionSplitChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="border rounded p-2 h-100">
+            <div class="small text-muted mb-2">Evolution mensuelle ({{ selected_year }})</div>
+            <div class="commission-chart-wrap"><canvas id="commissionMonthlyChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="border rounded p-2">
+            <div class="small text-muted mb-2">Montant par entite (periode)</div>
+            <div class="commission-chart-wrap-wide"><canvas id="commissionEntityChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if can_manage_commissions %}
+<div class="card mb-3"><div class="card-header">Ajouter regle commission</div><div class="card-body">
+  <form method="post" class="row g-2">
+    {{ form.hidden_tag() }}
+    <div class="col-md-3">{{ form.entity_id.label(class_='form-label') }}{{ form.entity_id(class_='form-select') }}</div>
+    <div class="col-md-3">{{ form.school_id.label(class_='form-label') }}{{ form.school_id(class_='form-select') }}</div>
+    <div class="col-md-2">{{ form.amount_per_student.label(class_='form-label') }}{{ form.amount_per_student(class_='form-control') }}</div>
+    <div class="col-md-2">{{ form.currency.label(class_='form-label') }}{{ form.currency(class_='form-control') }}</div>
+    <div class="col-md-2">{{ form.trigger_status.label(class_='form-label') }}{{ form.trigger_status(class_='form-select') }}</div>
+    <div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+  </form>
+</div></div>
+{% else %}
+<div class="alert alert-info mb-3">Mode lecture seule: seul le compte FOUNDER peut ajouter/modifiér les regles de commission.</div>
+{% endif %}
+
+<div class="card mb-3">
+  <div class="card-header">Regles</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead>
+        <tr><th>Entite</th><th>Ecole</th><th>Montant</th><th>Devise</th><th>Trigger</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for r in rules %}
+        <tr>
+          <td>{{ r.entity.name if r.entity else r.entity_id }}</td>
+          <td>{{ r.school.name if r.school else 'Toutes' }}</td>
+          <td>{{ r.amount_per_student }}</td>
+          <td>{{ r.currency }}</td>
+          <td>{{ r.trigger_status }}</td>
+          <td>
+            {% if can_manage_commissions %}
+            <div class="d-flex gap-1">
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('dashboard.edit_commission_rule', rule_id=r.id) }}">Modifier</a>
+              <form method="post" action="{{ url_for('dashboard.delete_commission_rule', rule_id=r.id) }}" data-confirm="Supprimer cette regle de commission ?">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+              </form>
+            </div>
+            {% else %}
+            <span class="text-muted">Lecture seule</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-muted">Aucune regle.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Commissions (periode selectionnee)</div>
+  <div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Étudiant</th><th>Montant</th><th>Statut</th><th>Date</th><th>Action</th></tr></thead><tbody>
+  {% for r in records %}
+    <tr>
+      <td>
+        {% if r.study_case and r.study_case.student %}
+          {{ r.study_case.student.nom }} {{ r.study_case.student.prenoms }}
+          <span class="text-muted small">({{ r.study_case.student.matricule }})</span>
+        {% else %}
+          <span class="text-muted">N/A</span>
+          <span class="text-muted small">(#{{ r.case_id }})</span>
+        {% endif %}
+      </td>
+      <td>{{ '%.2f'|format(r.amount) }}</td>
+      <td>{{ 'A recevoir' if r.status == 'pending' else 'Payee' }}</td>
+      <td>{{ (r.paid_at or r.created_at).strftime('%Y-%m-%d') if (r.paid_at or r.created_at) else '-' }}</td>
+      <td>
+        {% if can_manage_commissions and r.status == 'pending' and pay_forms.get(r.id) %}
+        <form method="post" action="{{ url_for('dashboard.mark_commission_paid', record_id=r.id) }}" class="d-flex gap-1">
+          {{ pay_forms[r.id].hidden_tag() }}
+          <input type="hidden" name="mois" value="{{ selected_month }}">
+          <input type="hidden" name="annee" value="{{ selected_year }}">
+          {{ pay_forms[r.id].submit(class_='btn btn-sm btn-success', value='Marquer payee') }}
+        </form>
+        {% else %}
+        <span class="text-muted">-</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="text-muted">Aucun record.</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    if (!window.Chart) return;
+    const chartData = {{ chart_data|tojson }};
+
+    const splitEl = document.getElementById("commissionSplitChart");
+    if (splitEl) {
+      new Chart(splitEl, {
+        type: "doughnut",
+        data: {
+          labels: chartData.split_labels,
+          datasets: [{ data: chartData.split_values, backgroundColor: ["#f59e0b", "#16a34a"] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      });
+    }
+
+    const monthlyEl = document.getElementById("commissionMonthlyChart");
+    if (monthlyEl) {
+      new Chart(monthlyEl, {
+        type: "bar",
+        data: {
+          labels: chartData.month_labels,
+          datasets: [
+            { label: "A recevoir", data: chartData.month_pending, backgroundColor: "#f59e0b" },
+            { label: "Encaisse", data: chartData.month_paid, backgroundColor: "#16a34a" }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      });
+    }
+
+    const entityEl = document.getElementById("commissionEntityChart");
+    if (entityEl) {
+      new Chart(entityEl, {
+        type: "bar",
+        data: {
+          labels: chartData.entity_labels,
+          datasets: [{ label: "Montant", data: chartData.entity_values, backgroundColor: "#2563eb" }]
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { beginAtZero: true } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}
+
+
+

@@ -1,0 +1,33 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Paramètres plateforme IT</h1>
+  <a class="btn btn-outline-primary" href="{{ url_for('admin.it_subscriptions') }}">Abonnements agences</a>
+</div>
+<div class="card">
+  <div class="card-body">
+    <div class="alert alert-info">
+      Regle actuelle: tant que les 3 plans sont a <strong>0</strong>, l'acces abonnement est gratuit (pas de blocage).<br>
+      Le blocage abonnement devient actif des qu'au moins un plan a un prix superieur a 0.
+    </div>
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+      {{ form.hidden_tag() }}
+      <div class="col-md-6">{{ form.site_name.label(class_='form-label') }}{{ form.site_name(class_='form-control') }}</div>
+      <div class="col-md-6">{{ form.site_logo_file.label(class_='form-label') }}{{ form.site_logo_file(class_='form-control') }}<div class="form-text">PNG/JPG/WEBP, 5MB max.</div></div>
+      <div class="col-md-6">{{ form.site_tagline.label(class_='form-label') }}{{ form.site_tagline(class_='form-control') }}</div>
+      <div class="col-md-6">{{ form.site_footer_text.label(class_='form-label') }}{{ form.site_footer_text(class_='form-control') }}</div>
+      <div class="col-md-4">{{ form.plan_starter_price.label(class_='form-label') }}{{ form.plan_starter_price(class_='form-control', placeholder='0') }}</div>
+      <div class="col-md-4">{{ form.plan_pro_price.label(class_='form-label') }}{{ form.plan_pro_price(class_='form-control', placeholder='0') }}</div>
+      <div class="col-md-4">{{ form.plan_enterprise_price.label(class_='form-label') }}{{ form.plan_enterprise_price(class_='form-control', placeholder='0') }}</div>
+      <div class="col-md-4">{{ form.plan_currency.label(class_='form-label') }}{{ form.plan_currency(class_='form-control', placeholder='XOF') }}</div>
+      <div class="col-md-4">{{ form.expiry_notice_days.label(class_='form-label') }}{{ form.expiry_notice_days(class_='form-control', placeholder='7') }}</div>
+      <div class="col-md-4">{{ form.billing_sender_email.label(class_='form-label') }}{{ form.billing_sender_email(class_='form-control', placeholder='eudyproject@gmail.com') }}</div>
+      <div class="col-md-4">{{ form.payment_link_starter.label(class_='form-label') }}{{ form.payment_link_starter(class_='form-control', placeholder='https://pay...starter') }}</div>
+      <div class="col-md-4">{{ form.payment_link_pro.label(class_='form-label') }}{{ form.payment_link_pro(class_='form-control', placeholder='https://pay...pro') }}</div>
+      <div class="col-md-4">{{ form.payment_link_enterprise.label(class_='form-label') }}{{ form.payment_link_enterprise(class_='form-control', placeholder='https://pay...enterprise') }}</div>
+      <div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

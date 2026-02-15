@@ -1,0 +1,14 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4">Generer lien token</h1>
+<form method="post" class="row g-3">{{ form.hidden_tag() }}
+<div class="col-md-3">{{ form.form_id.label(class_='form-label') }}{{ form.form_id(class_='form-select') }}</div>
+<div class="col-md-3">{{ form.email.label(class_='form-label') }}{{ form.email(class_='form-control') }}</div>
+<div class="col-md-2">{{ form.student_id.label(class_='form-label') }}{{ form.student_id(class_='form-control') }}</div>
+<div class="col-md-2">{{ form.guardian_id.label(class_='form-label') }}{{ form.guardian_id(class_='form-control') }}</div>
+<div class="col-md-2">{{ form.expires_days.label(class_='form-label') }}{{ form.expires_days(class_='form-control') }}</div>
+<div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+</form>
+{% if token_link %}<div class="alert alert-info mt-3">Lien: <a href="{{ token_link }}">{{ token_link }}</a></div>{% endif %}
+{% endblock %}
+

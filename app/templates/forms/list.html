@@ -1,0 +1,7 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3"><h1 class="h4">Formulaires</h1><a class="btn btn-primary" href="{{ url_for('forms_module.create_form') }}">Nouveau</a></div>
+<table class="table"><thead><tr><th>ID</th><th>Titre</th><th></th></tr></thead><tbody>{% for f in forms %}<tr><td>{{ f.id }}</td><td>{{ f.title }}</td><td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('forms_module.manage_fields', form_id=f.id) }}">Champs</a> <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('forms_module.view_responses', form_id=f.id) }}">Reponses</a></td></tr>{% endfor %}</tbody></table>
+<a class="btn btn-outline-dark" href="{{ url_for('forms_module.generate_token') }}">Generer lien token</a>
+{% endblock %}
+

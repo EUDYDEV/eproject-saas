@@ -1,0 +1,63 @@
+﻿<nav class="sidebar-nav nav flex-column p-2 gap-1">
+  {% set ep = request.endpoint or '' %}
+  {% set chat_total_unread = (chat_unread_messages or 0) + (chat_unread_alerts or 0) %}
+  {% set subscription_unread_total = (subscription_unread_alerts or 0) %}
+  {% set chat_notif_href = url_for('dashboard.chat_room', branch_id=chat_notification_branch_id) if chat_notification_branch_id else url_for('dashboard.chat_room') %}
+
+  {% if is_platform_super_admin and it_ui_mode == 'saas' %}
+  <a class="nav-link {% if ep == 'dashboard.it_saas_dashboard' %}active{% endif %}" href="{{ url_for('dashboard.it_saas_dashboard') }}">Dashboard SaaS IT</a>
+  <a class="nav-link {% if ep.startswith('logs.') %}active{% endif %}" href="{{ url_for('logs.logs_index') }}">Logs</a>
+  <a class="nav-link {% if ep == 'admin.it_settings' %}active{% endif %}" href="{{ url_for('admin.it_settings') }}">Paramètres IT</a>
+  <a class="nav-link {% if ep == 'admin.it_subscriptions' %}active{% endif %}" href="{{ url_for('admin.it_subscriptions') }}">Abonnements{% if is_platform_super_admin and subscription_unread_total %} <span class="badge rounded-pill text-bg-danger">{{ subscription_unread_total }}</span>{% endif %}</a>
+  <a class="nav-link {% if ep == 'admin.it_clients_list' %}active{% endif %}" href="{{ url_for('admin.it_clients_list') }}">Liste des clients</a>
+  <a class="nav-link {% if ep == 'admin.it_client_emails' %}active{% endif %}" href="{{ url_for('admin.it_client_emails') }}">Envoyer emails</a>
+  <a class="nav-link {% if ep == 'admin.it_password_resets' %}active{% endif %}" href="{{ url_for('admin.it_password_resets') }}">MDP oublie</a>
+  <a class="nav-link {% if ep == 'dashboard.chat_room' %}active{% endif %}" href="{{ chat_notif_href }}">Service clients{% if is_platform_super_admin and chat_total_unread %} <span class="badge rounded-pill text-bg-danger">{{ chat_total_unread }}</span>{% endif %}</a>
+  <a class="nav-link" href="{{ url_for('dashboard.it_agency_dashboard') }}">Basculer vers une agence</a>
+  <a class="nav-link {% if ep == 'auth.profile' %}active{% endif %}" href="{{ url_for('auth.profile') }}">Mon profil</a>
+  {% else %}
+  <a class="nav-link {% if ep == 'auth.profile' %}active{% endif %}" href="{{ url_for('auth.profile') }}">Mon profil</a>
+  {% if is_platform_super_admin %}
+  <a class="nav-link {% if ep in ['dashboard.index', 'dashboard.index_alias', 'dashboard.it_agency_dashboard'] and it_ui_mode == 'agency' %}active{% endif %}" href="{{ url_for('dashboard.it_agency_dashboard') }}">Dashboard Agence (IT)</a>
+  {% else %}
+  <a class="nav-link {% if ep in ['dashboard.index', 'dashboard.index_alias'] %}active{% endif %}" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+  {% endif %}
+
+  <a class="nav-link {% if ep.startswith('students.') and ep not in ['students.import_students_csv', 'students.export_students_csv', 'students.list_abroad_students'] %}active{% endif %}" href="{{ url_for('students.list_students') }}">Étudiants</a>
+  <a class="nav-link {% if ep == 'students.list_abroad_students' %}active{% endif %}" href="{{ url_for('students.list_abroad_students') }}">Étudiants étranger</a>
+  <a class="nav-link {% if ep == 'students.import_students_csv' %}active{% endif %}" href="{{ url_for('students.import_students_csv') }}">Import CSV</a>
+  <a class="nav-link {% if ep == 'students.export_students_csv' %}active{% endif %}" href="{{ url_for('students.export_students_csv') }}">Export Excel</a>
+  <a class="nav-link {% if ep == 'procedures.list_cases' or ep.startswith('procedures.case_') %}active{% endif %}" href="{{ url_for('procedures.list_cases') }}">Procedures</a>
+  <a class="nav-link {% if ep == 'procedures.list_entities' or ep.startswith('procedures.create_entity') or ep.startswith('procedures.edit_entity') %}active{% endif %}" href="{{ url_for('procedures.list_entities') }}">Entites</a>
+  <a class="nav-link {% if ep == 'procedures.list_schools' or ep.startswith('procedures.create_school') or ep.startswith('procedures.edit_school') %}active{% endif %}" href="{{ url_for('procedures.list_schools') }}">Ecoles</a>
+  <a class="nav-link {% if ep.startswith('emails.') %}active{% endif %}" href="{{ url_for('emails.send_bulk') }}">Emails</a>
+  {% if current_user.role in ['FOUNDER'] or is_platform_super_admin %}
+  <a class="nav-link {% if ep == 'emails.smtp_settings' %}active{% endif %}" href="{{ url_for('emails.smtp_settings') }}">SMTP</a>
+  {% endif %}
+  <a class="nav-link {% if ep.startswith('forms_module.') %}active{% endif %}" href="{{ url_for('forms_module.list_forms') }}">Formulaires</a>
+  <a class="nav-link {% if ep.startswith('appointments.') %}active{% endif %}" href="{{ url_for('appointments.list_appointments') }}">RDV</a>
+  <a class="nav-link {% if ep == 'dashboard.arrival_support' %}active{% endif %}" href="{{ url_for('dashboard.arrival_support') }}">Arrivee/Support</a>
+  {% if not (is_platform_super_admin and it_ui_mode == 'agency') %}
+  <a class="nav-link {% if ep == 'dashboard.chat_room' %}active{% endif %}" href="{{ chat_notif_href }}">Service clients{% if is_platform_super_admin and chat_total_unread %} <span class="badge rounded-pill text-bg-danger">{{ chat_total_unread }}</span>{% endif %}</a>
+  {% endif %}
+  {% if current_user.role in ['FOUNDER'] or is_platform_super_admin %}
+  <a class="nav-link {% if ep in ['dashboard.commissions', 'dashboard.mark_commission_paid'] %}active{% endif %}" href="{{ url_for('dashboard.commissions') }}">Commissions</a>
+  {% endif %}
+  {% if current_user.role in ['FOUNDER'] %}
+  <a class="nav-link {% if ep == 'dashboard.founder_dashboard' %}active{% endif %}" href="{{ url_for('dashboard.founder_dashboard') }}">Vue Fondateur</a>
+  {% endif %}
+  {% if is_platform_super_admin and it_ui_mode == 'saas' %}
+  <a class="nav-link {% if ep.startswith('logs.') %}active{% endif %}" href="{{ url_for('logs.logs_index') }}">Logs</a>
+  <a class="nav-link {% if ep == 'admin.it_settings' %}active{% endif %}" href="{{ url_for('admin.it_settings') }}">Paramètres IT</a>
+  <a class="nav-link {% if ep == 'admin.it_subscriptions' %}active{% endif %}" href="{{ url_for('admin.it_subscriptions') }}">Abonnements{% if is_platform_super_admin and subscription_unread_total %} <span class="badge rounded-pill text-bg-danger">{{ subscription_unread_total }}</span>{% endif %}</a>
+  <a class="nav-link {% if ep == 'admin.it_password_resets' %}active{% endif %}" href="{{ url_for('admin.it_password_resets') }}">MDP oublie</a>
+  {% endif %}
+  {% if current_user.role in ['FOUNDER', 'ADMIN_BRANCH', 'ADMIN'] or is_platform_super_admin %}
+  <a class="nav-link {% if ep.startswith('admin.users_') or ep == 'admin.create_user' or ep == 'admin.edit_user' %}active{% endif %}" href="{{ url_for('admin.users_list') }}">Utilisateurs</a>
+  {% endif %}
+  {% if current_user.role in ['FOUNDER'] %}
+  <a class="nav-link {% if ep.startswith('admin.branches_') or ep == 'admin.create_branch' or ep == 'admin.edit_branch' %}active{% endif %}" href="{{ url_for('admin.branches_list') }}">Branches</a>
+  {% endif %}
+  {% endif %}
+</nav>
+

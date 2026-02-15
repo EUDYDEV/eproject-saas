@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 mb-1">Dossier #{{ case_row.id }} - {{ student.nom }} {{ student.prenoms }}</h1>
+    <div class="text-muted">{{ student.matricule }} | {{ case_row.destination_country or '-' }} / {{ case_row.destination_city or '-' }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{{ url_for('students.view_student', student_id=student.id) }}">Fiche étudiant</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('procedures.edit_case', case_id=case_row.id) }}">Modifier dossier</a>
+    {% if current_user.role in ['FOUNDER', 'ADMIN_BRANCH', 'ADMIN'] %}
+    <form method="post" action="{{ url_for('procedures.delete_case', case_id=case_row.id) }}" data-confirm="Supprimer ce dossier procedure ?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-outline-danger" type="submit">Supprimer dossier</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  {% if not is_closed_case %}
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">Timeline des etapes</div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Etape</th><th>Echeance</th><th>Statut</th><th>Notes</th><th></th></tr></thead>
+          <tbody>
+          {% for s in stages %}
+          <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.due_date.strftime('%Y-%m-%d') if s.due_date else '-' }}</td>
+            <td>
+              <span class="badge {% if s.status == 'done' %}text-bg-success{% elif s.status == 'doing' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ s.status }}</span>
+            </td>
+            <td>{{ s.notes or '-' }}</td>
+            <td>
+              {% if is_closed_case %}
+              <span class="text-muted small">Cloture</span>
+              {% else %}
+              <form method="post" action="{{ url_for('procedures.update_stage_status', case_id=case_row.id, stage_id=s.id) }}" class="d-flex gap-1">
+                {{ status_forms[s.id].hidden_tag() }}
+                {{ status_forms[s.id].status(class_='form-select form-select-sm', style='min-width:110px') }}
+                {{ status_forms[s.id].submit(class_='btn btn-sm btn-outline-primary') }}
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-muted">Aucune etape.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="{{ 'col-lg-12' if is_closed_case else 'col-lg-5' }}">
+    {% if is_closed_case %}
+    <div class="alert alert-success mb-3">
+      Ce dossier est deja <strong>{{ case_row.status }}</strong>. Les etapes sont cloturees automatiquement.
+    </div>
+    {% endif %}
+
+    {% if not is_closed_case %}
+    <div class="card">
+      <div class="card-header">Ajouter une etape</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('procedures.add_stage', case_id=case_row.id) }}">
+          {{ stage_form.hidden_tag() }}
+          <div class="mb-2">{{ stage_form.name.label(class_='form-label') }}{{ stage_form.name(class_='form-control') }}</div>
+          <div class="mb-2">{{ stage_form.status.label(class_='form-label') }}{{ stage_form.status(class_='form-select') }}</div>
+          <div class="mb-2">{{ stage_form.due_date.label(class_='form-label') }}{{ stage_form.due_date(class_='form-control') }}</div>
+          <div class="mb-2">{{ stage_form.notes.label(class_='form-label') }}{{ stage_form.notes(class_='form-control', rows=3) }}</div>
+          {{ stage_form.submit(class_='btn btn-primary') }}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card mt-3">
+      <div class="card-body">
+        <div><strong>Statut dossier:</strong> {{ case_row.status }}</div>
+        <div><strong>Actif:</strong> {{ 'Oui' if case_row.is_active else 'Non' }}</div>
+        <div><strong>Entite:</strong> {{ case_row.entity.name if case_row.entity else '-' }}</div>
+        <div><strong>Ecole:</strong> {{ case_row.school.name if case_row.school else '-' }}</div>
+        <hr>
+        <div class="small text-muted mb-2">Validation rapide voyage</div>
+        <div class="d-flex flex-wrap gap-2">
+          <form method="post" action="{{ url_for('procedures.quick_mark_case_status', case_id=case_row.id, status='parti') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-primary" type="submit">Marquer Parti</button>
+          </form>
+          <form method="post" action="{{ url_for('procedures.quick_mark_case_status', case_id=case_row.id, status='arrive') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-success" type="submit">Marquer Arrive</button>
+          </form>
+          <form method="post" action="{{ url_for('procedures.quick_mark_case_status', case_id=case_row.id, status='installe') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-outline-dark" type="submit">Marquer Installe</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% if not is_closed_case %}
+    <div class="card mt-3">
+      <div class="card-header">Uploader document du dossier</div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('procedures.upload_case_document', case_id=case_row.id) }}" enctype="multipart/form-data">
+          {{ document_form.hidden_tag() }}
+          <div class="mb-2">{{ document_form.doc_type.label(class_='form-label') }}{{ document_form.doc_type(class_='form-control') }}</div>
+          <div class="mb-2">{{ document_form.notes.label(class_='form-label') }}{{ document_form.notes(class_='form-control', rows=2) }}</div>
+          <div class="mb-2">{{ document_form.file.label(class_='form-label') }}{{ document_form.file(class_='form-control') }}</div>
+          {{ document_form.submit(class_='btn btn-primary') }}
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">Paiements étudiant (gestion équipe)</div>
+  <div class="card-body border-bottom">
+    <form method="post" action="{{ url_for('procedures.add_case_payment', case_id=case_row.id) }}" class="row g-2 align-items-end">
+      {{ payment_form.hidden_tag() }}
+      <div class="col-md-4">{{ payment_form.label.label(class_='form-label') }}{{ payment_form.label(class_='form-control', placeholder='Ex: 1ere tranche') }}</div>
+      <div class="col-md-2">{{ payment_form.amount.label(class_='form-label') }}{{ payment_form.amount(class_='form-control', placeholder='150000') }}</div>
+      <div class="col-md-2">{{ payment_form.currency.label(class_='form-label') }}{{ payment_form.currency(class_='form-control', placeholder='XOF') }}</div>
+      <div class="col-md-2">{{ payment_form.paid_at.label(class_='form-label') }}{{ payment_form.paid_at(class_='form-control') }}</div>
+      <div class="col-md-1 form-check mt-4">{{ payment_form.paid(class_='form-check-input') }} {{ payment_form.paid.label(class_='form-check-label') }}</div>
+      <div class="col-md-1 d-grid">{{ payment_form.submit(class_='btn btn-primary') }}</div>
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Libelle</th><th>Montant</th><th>Devise</th><th>Paye</th><th>Date paiement</th><th></th></tr></thead>
+      <tbody>
+      {% for p in payments %}
+      <tr>
+        <form method="post" action="{{ url_for('procedures.update_case_payment', case_id=case_row.id, payment_id=p.id) }}">
+          {{ payment_forms[p.id].hidden_tag() }}
+          <td>{{ payment_forms[p.id].label(class_='form-control form-control-sm') }}</td>
+          <td>{{ payment_forms[p.id].amount(class_='form-control form-control-sm') }}</td>
+          <td>{{ payment_forms[p.id].currency(class_='form-control form-control-sm') }}</td>
+          <td class="text-center">{{ payment_forms[p.id].paid(class_='form-check-input') }}</td>
+          <td>{{ payment_forms[p.id].paid_at(class_='form-control form-control-sm') }}</td>
+          <td>{{ payment_forms[p.id].submit(class_='btn btn-sm btn-outline-primary') }}</td>
+        </form>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-muted">Aucun paiement enregistré pour ce dossier.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">Documents du dossier</div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead><tr><th>Type</th><th>Fichier</th><th>Statut</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+      {% for d in documents %}
+      <tr>
+        <td>{{ d.doc_type }}</td>
+        <td>{{ d.filename }}</td>
+        <td>
+          <form method="post" action="{{ url_for('procedures.update_case_document_status', case_id=case_row.id, document_id=d.id) }}" class="d-flex gap-1">
+            {{ document_status_forms[d.id].hidden_tag() }}
+            {{ document_status_forms[d.id].review_status(class_='form-select form-select-sm', style='min-width:110px') }}
+            {{ document_status_forms[d.id].submit(class_='btn btn-sm btn-outline-primary') }}
+          </form>
+        </td>
+        <td>{{ d.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('procedures.download_case_document', case_id=case_row.id, document_id=d.id) }}">Telecharger</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-muted">Aucun document sur ce dossier.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

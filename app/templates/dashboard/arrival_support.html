@@ -1,0 +1,135 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Suivi arrivee / logement / accompagnement</h1>
+
+<div class="card mb-3"><div class="card-body">
+  <form method="post" class="row g-2">
+    {{ form.hidden_tag() }}
+    <div class="col-12">
+      <label class="form-label">Rechercher dossier (nom ou matricule)</label>
+      <input id="caseSearchInput" class="form-control" list="caseSearchList" placeholder="Ex: IF-2026-00001 ou KOUAME EUDES">
+      <datalist id="caseSearchList">
+        {% for value, label in form.case_id.choices %}
+        <option value="{{ label }}"></option>
+        {% endfor %}
+      </datalist>
+      <div class="form-text">Choisis un resultat de la liste pour lier le suivi au bon dossier.</div>
+      <div class="d-none">{{ form.case_id(class_='form-select', id='caseIdSelect') }}</div>
+    </div>
+    <div class="col-md-6">{{ form.host_entity_name.label(class_='form-label') }}{{ form.host_entity_name(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.contact_name.label(class_='form-label') }}{{ form.contact_name(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.phone.label(class_='form-label') }}{{ form.phone(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.email.label(class_='form-label') }}{{ form.email(class_='form-control') }}</div>
+    <div class="col-md-3">{{ form.lodging_status.label(class_='form-label') }}{{ form.lodging_status(class_='form-select') }}</div>
+    <div class="col-md-3">{{ form.pickup_status.label(class_='form-label') }}{{ form.pickup_status(class_='form-select') }}</div>
+    <div class="col-md-3">{{ form.mentor_assigned.label(class_='form-label') }}{{ form.mentor_assigned(class_='form-control') }}</div>
+    <div class="col-md-3">{{ form.confirmed_at.label(class_='form-label') }}{{ form.confirmed_at(class_='form-control') }}</div>
+    <div class="col-12">{{ form.followup_notes.label(class_='form-label') }}{{ form.followup_notes(class_='form-control', rows=3) }}</div>
+    <div class="col-12">{{ form.submit(class_='btn btn-primary') }}</div>
+  </form>
+</div></div>
+
+<div class="card">
+  <div class="card-header">Historique suivi</div>
+  <div class="table-responsive">
+    <table class="table table-sm mb-0">
+      <thead>
+        <tr>
+          <th>Étudiant</th>
+          <th>Dossier</th>
+          <th>Entite accueil</th>
+          <th>Logement</th>
+          <th>Pickup</th>
+          <th>Mentor</th>
+          <th>Confirmation</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for item in support_rows %}
+        <tr>
+          <td>{{ item.nom_complet }}<br><span class="text-muted small">{{ item.matricule }}</span></td>
+          <td>#{{ item.row.case_id }}</td>
+          <td>{{ item.row.host_entity_name or '-' }}</td>
+          <td>{{ item.row.lodging_status or '-' }}</td>
+          <td>{{ item.row.pickup_status or '-' }}</td>
+          <td>{{ item.row.mentor_assigned or '-' }}</td>
+          <td>{{ item.row.confirmed_at or '-' }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" class="text-muted">Aucun enregistrément.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-body border-top d-flex justify-content-between align-items-center">
+    <div class="small text-muted">
+      Page {{ support_pagination.page }} / {{ support_pagination.pages if support_pagination.pages else 1 }}
+    </div>
+    <div class="d-flex gap-2">
+      {% if support_pagination.has_prev %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('dashboard.arrival_support', page=support_pagination.prev_num, q=q) }}">Precedent</a>
+      {% endif %}
+      {% if support_pagination.has_next %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('dashboard.arrival_support', page=support_pagination.next_num, q=q) }}">Suivant</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  (function () {
+    const input = document.getElementById("caseSearchInput");
+    const select = document.getElementById("caseIdSelect");
+    const dataList = document.getElementById("caseSearchList");
+    if (!input || !select || !dataList) return;
+
+    const options = Array.from(select.options).map((opt) => ({
+      id: String(opt.value || "").trim(),
+      label: String(opt.text || "").trim(),
+      lower: String(opt.text || "").trim().toLowerCase(),
+    }));
+
+    const selectByInput = function () {
+      const raw = (input.value || "").trim().toLowerCase();
+      if (!raw) return false;
+
+      const exact = options.find((o) => o.lower === raw);
+      if (exact) {
+        select.value = exact.id;
+        input.value = exact.label;
+        return true;
+      }
+
+      const matched = options.filter((o) => o.lower.includes(raw));
+      if (matched.length === 1) {
+        select.value = matched[0].id;
+        input.value = matched[0].label;
+        return true;
+      }
+      return false;
+    };
+
+    if (select.value) {
+      const current = options.find((o) => o.id === String(select.value));
+      if (current) input.value = current.label;
+    }
+    input.addEventListener("change", selectByInput);
+    input.addEventListener("blur", selectByInput);
+
+    const form = input.closest("form");
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        const ok = selectByInput();
+        if (!ok) {
+          e.preventDefault();
+          alert("Selectionne un dossier valide dans la liste.");
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}
+
