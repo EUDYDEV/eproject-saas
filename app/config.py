@@ -14,9 +14,21 @@ def _as_bool(name, default=False):
     return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _normalize_database_url(raw_url: str) -> str:
+    url = (raw_url or "").strip()
+    if url.startswith("postgres://"):
+        # Render/Heroku legacy scheme -> SQLAlchemy 2 compatible scheme.
+        return "postgresql+psycopg://" + url[len("postgres://") :]
+    if url.startswith("postgresql://") and not url.startswith("postgresql+psycopg://"):
+        return "postgresql+psycopg://" + url[len("postgresql://") :]
+    return url
+
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", f"sqlite:///{basedir / 'innovformation.db'}")
+    SQLALCHEMY_DATABASE_URI = _normalize_database_url(
+        os.getenv("DATABASE_URL", f"sqlite:///{basedir / 'innovformation.db'}")
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     MAX_CONTENT_LENGTH = 10 * 1024 * 1024
