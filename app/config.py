@@ -60,3 +60,7 @@ class Config:
     PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME", "https")
     SECURITY_FORCE_HTTPS = _as_bool("SECURITY_FORCE_HTTPS", False)
     PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+
+    BOOTSTRAP_IT_EMAIL = os.getenv("BOOTSTRAP_IT_EMAIL", "").strip().lower()
+    BOOTSTRAP_IT_USERNAME = os.getenv("BOOTSTRAP_IT_USERNAME", "").strip()
+    BOOTSTRAP_IT_PASSWORD = os.getenv("BOOTSTRAP_IT_PASSWORD", "").strip()

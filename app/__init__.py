@@ -58,6 +58,7 @@ def create_app(config_class=Config):
     register_cli(app)
     ensure_runtime_schema_compat(app)
     ensure_runtime_tables(app)
+    ensure_platform_it_account(app)
 
     @app.route("/health")
     def healthcheck():
@@ -362,6 +363,61 @@ def create_app(config_class=Config):
 
 
 
+
+
+def ensure_platform_it_account(app):
+    """Bootstrap a platform IT account on fresh production databases.
+
+    Env vars used:
+    - BOOTSTRAP_IT_EMAIL
+    - BOOTSTRAP_IT_USERNAME
+    - BOOTSTRAP_IT_PASSWORD
+    """
+    with app.app_context():
+        try:
+            email = (app.config.get("BOOTSTRAP_IT_EMAIL") or "").strip().lower()
+            username = (app.config.get("BOOTSTRAP_IT_USERNAME") or "").strip()
+            raw_password = (app.config.get("BOOTSTRAP_IT_PASSWORD") or "").strip()
+
+            if not email or not username or not raw_password:
+                return
+
+            # If any IT account already exists, keep current state.
+            existing_it = User.query.filter(User.role.in_(["IT", "INFORMATICIEN"]))                .order_by(User.id.asc()).first()
+            if existing_it:
+                if existing_it.platform_role != "SUPER_ADMIN_PLATFORM":
+                    existing_it.platform_role = "SUPER_ADMIN_PLATFORM"
+                    existing_it.is_active = True
+                    existing_it.must_change_password = False
+                    db.session.commit()
+                return
+
+            by_email = User.query.filter_by(email=email).first()
+            if by_email:
+                by_email.username = username
+                by_email.role = "IT"
+                by_email.platform_role = "SUPER_ADMIN_PLATFORM"
+                by_email.is_active = True
+                by_email.must_change_password = False
+                if not by_email.password_hash:
+                    by_email.password_hash = password_hasher.hash(raw_password)
+                db.session.commit()
+                return
+
+            row = User(
+                username=username,
+                email=email,
+                password_hash=password_hasher.hash(raw_password),
+                platform_role="SUPER_ADMIN_PLATFORM",
+                role="IT",
+                is_active=True,
+                must_change_password=False,
+                branch_id=None,
+            )
+            db.session.add(row)
+            db.session.commit()
+        except Exception as exc:
+            app.logger.warning("IT bootstrap failed: %s", exc)
 
 
 def ensure_runtime_tables(app):
