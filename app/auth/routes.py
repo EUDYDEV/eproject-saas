@@ -110,7 +110,10 @@ def login():
 
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data.strip()).first()
+        login_value = (form.username.data or "").strip()
+        user = User.query.filter_by(username=login_value).first()
+        if user is None and "@" in login_value:
+            user = User.query.filter(User.email.ilike(login_value)).first()
         if user and user.is_active:
             try:
                 if password_hasher.verify(user.password_hash, form.password.data):
