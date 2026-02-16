@@ -165,7 +165,7 @@
       {% if not subscription_lock %}
       <div class="app-shell">
         <aside class="sidebar-desktop d-none d-xl-flex {% if is_platform_super_admin and it_ui_mode == "saas" %}it-saas-sidebar{% endif %}">
-          <div class="sidebar-brand p-3 fw-bold border-bottom">{% if workspace_logo_url %}<img src="{{ workspace_logo_url }}" alt="{{ workspace_name }}" style="max-height:26px;" class="me-2">{% endif %}{{ workspace_name }}</div>
+          <div class="sidebar-brand p-3 fw-bold border-bottom">{% if workspace_logo_url %}<img src="{{ workspace_logo_url }}" alt="" aria-hidden="true" style="max-height:26px;" class="me-2">{% endif %}{{ workspace_name }}</div>
           {% include "_sidebar_nav.html" %}
         </aside>
 
@@ -175,7 +175,7 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
           </div>
           <div class="offcanvas-body p-0">
-            <div class="sidebar-brand p-3 fw-bold border-bottom">{% if workspace_logo_url %}<img src="{{ workspace_logo_url }}" alt="{{ workspace_name }}" style="max-height:26px;" class="me-2">{% endif %}{{ workspace_name }}</div>
+            <div class="sidebar-brand p-3 fw-bold border-bottom">{% if workspace_logo_url %}<img src="{{ workspace_logo_url }}" alt="" aria-hidden="true" style="max-height:26px;" class="me-2">{% endif %}{{ workspace_name }}</div>
             {% include "_sidebar_nav.html" %}
           </div>
         </aside>

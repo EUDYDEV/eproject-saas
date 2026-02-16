@@ -32,6 +32,21 @@ from app.utils.subscriptions import (
 password_hasher = PasswordHasher()
 
 
+def _clean_text_label(value, fallback=""):
+    raw = (value or fallback or "")
+    # Remove UTF-8 BOM and trim spaces/newlines.
+    return str(raw).replace("﻿", "").strip()
+
+
+def _safe_logo_url(value):
+    url = (value or "").strip()
+    if not url:
+        return ""
+    if url.startswith(("http://", "https://", "/", "uploads/", "static/")):
+        return url
+    return ""
+
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -111,11 +126,11 @@ def create_app(config_class=Config):
             settings = get_or_create_portal_settings()
         except (OperationalError, ProgrammingError):
             settings = None
-        site_name = (settings.site_name if settings and getattr(settings, "site_name", None) else "E-PROJECT")
-        site_tagline = (settings.site_tagline if settings and getattr(settings, "site_tagline", None) else "Plateforme de gestion etudiants")
-        site_footer_text = (settings.site_footer_text if settings and getattr(settings, "site_footer_text", None) else site_name)
-        site_logo_url = (settings.site_logo_url if settings and getattr(settings, "site_logo_url", None) else "")
-        workspace_name = site_name
+        site_name = _clean_text_label((settings.site_name if settings and getattr(settings, "site_name", None) else "E-PROJECT"), "E-PROJECT")
+        site_tagline = _clean_text_label((settings.site_tagline if settings and getattr(settings, "site_tagline", None) else "Plateforme de gestion etudiants"), "Plateforme de gestion etudiants")
+        site_footer_text = _clean_text_label((settings.site_footer_text if settings and getattr(settings, "site_footer_text", None) else site_name), site_name)
+        site_logo_url = _safe_logo_url(settings.site_logo_url if settings and getattr(settings, "site_logo_url", None) else "")
+        workspace_name = _clean_text_label(site_name, "E-PROJECT")
         workspace_logo_url = site_logo_url
         it_scope_branch_id = session.get("it_scope_branch_id")
         it_scope_branches = []
@@ -132,7 +147,7 @@ def create_app(config_class=Config):
             if workspace_branch_id:
                 branch = Branch.query.get(workspace_branch_id)
                 if branch and not is_super_admin_platform(current_user):
-                    workspace_name = branch.name
+                    workspace_name = _clean_text_label(branch.name, workspace_name)
                     workspace_logo_url = branch.logo_url or ""
             if role == "FOUNDER" and subscriptions_enforced() and not is_subscription_active_for_user(current_user):
                 subscription_lock = True
@@ -147,7 +162,7 @@ def create_app(config_class=Config):
             if it_ui_mode == "agency" and it_scope_branch_id:
                 scoped = Branch.query.get(it_scope_branch_id)
                 if scoped:
-                    workspace_name = f"{scoped.name} (Vue Agence IT)"
+                    workspace_name = _clean_text_label(f"{scoped.name} (Vue Agence IT)", workspace_name)
                     workspace_logo_url = scoped.logo_url or ""
                 else:
                     it_scope_branch_id = None
